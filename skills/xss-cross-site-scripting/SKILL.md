@@ -6,9 +6,19 @@ description: >-
 
 # SKILL: Cross-Site Scripting (XSS) — Expert Attack Playbook
 
-> **AI LOAD INSTRUCTION**: This skill covers non-obvious XSS techniques, context-specific payload selection, WAF bypass, CSP bypass, and post-exploitation. Assume the reader already knows `<script>alert(1)</script>` — this file only covers what base models typically miss.
+> **AI LOAD INSTRUCTION**: This skill covers non-obvious XSS techniques, context-specific payload selection, WAF bypass, CSP bypass, and post-exploitation. Assume the reader already knows `<script>alert(1)</script>` — this file only covers what base models typically miss. For real-world CVE cases, HttpOnly bypass strategies, XS-Leaks side channels, and session fixation attacks, load the companion [SCENARIOS.md](./SCENARIOS.md).
 
 ## 0. RELATED ROUTING
+
+### Extended Scenarios
+
+Also load [SCENARIOS.md](./SCENARIOS.md) when you need:
+- Django debug page XSS (CVE-2017-12794) — duplicate key error → unescaped exception → XSS
+- UTF-7 XSS for legacy IE environments (`+ADw-script+AD4-`)
+- HttpOnly bypass methodology — proxy-the-browser, session riding, CSRF-via-XSS
+- XS-Leaks side channel attacks — timing oracle, cache probing, `performance.now()` measurement
+- Session fixation via XSS — pre-set session ID before victim login
+- DOM clobbering techniques for CSP-restricted environments
 
 Before broad payload spraying, you can first load:
 

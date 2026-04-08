@@ -6,9 +6,21 @@ description: >-
 
 # SKILL: Upload Insecure Files — Validation Bypass, Storage Abuse, and Processing Chains
 
-> **AI LOAD INSTRUCTION**: Expert file upload attack playbook. Use when the target accepts files, imports, avatars, media, documents, or archives and you need the full workflow: validation bypass, storage path abuse, post-upload access, parser exploitation, multi-tenant overwrite, and chaining into XSS, XXE, CMDi, traversal, or business logic impact.
+> **AI LOAD INSTRUCTION**: Expert file upload attack playbook. Use when the target accepts files, imports, avatars, media, documents, or archives and you need the full workflow: validation bypass, storage path abuse, post-upload access, parser exploitation, multi-tenant overwrite, and chaining into XSS, XXE, CMDi, traversal, or business logic impact. For web server parsing vulnerabilities, PUT method exploitation, and specific CVEs (WebLogic, Flink, Tomcat), load the companion [SCENARIOS.md](./SCENARIOS.md).
 
 ## 0. RELATED ROUTING
+
+### Extended Scenarios
+
+Also load [SCENARIOS.md](./SCENARIOS.md) when you need:
+- IIS parsing vulnerabilities — `x.asp/` directory parsing, `;` semicolon truncation (`shell.asp;.jpg`)
+- Nginx parsing misconfiguration — `avatar.jpg/.php` with `cgi.fix_pathinfo=1`
+- Apache parsing — multiple extensions, `AddHandler`, CVE-2017-15715 `\n` (0x0A) bypass
+- PUT method exploitation — IIS WebDAV PUT+COPY, Tomcat CVE-2017-12615 `readonly` + `.jsp/` bypass
+- WebLogic CVE-2018-2894 arbitrary file upload via Web Service Test Page
+- Apache Flink CVE-2020-17518 file upload with path traversal
+- Upload + parsing vulnerability chain — EXIF PHP code + Nginx `/.php` path info
+- Full extension bypass reference table (PHP/ASP/JSP alternatives, case variations, null bytes)
 
 Use this file as the deep upload workflow reference. Also load:
 
@@ -204,4 +216,73 @@ When the upload path includes account, project, or organization identifiers, alw
 [] Probe processing chain: image, archive, XML, document, PDF
 [] Run A/B authorization on read, replace, delete, and share actions
 [] Map predictable paths and public/private URL boundaries
+```
+
+---
+
+## 11. UPLOAD SUCCESS RATE MODEL & ADVANCED METHODOLOGY
+
+### Success Rate Formula
+
+```
+P(RCE via Upload) = P(bypass_detection) × P(obtain_path) × P(execute_via_webserver)
+```
+
+Many testers focus only on bypassing file type checks, but forget:
+
+- **Path discovery**: Without knowing the upload path, even a successful bypass is useless
+- **Server parsing**: Even with a `.php` file uploaded, if the web server doesn't parse it as PHP, no RCE
+
+### Rich Text Editor Path Matrix
+
+| Editor | Common Upload Path | Version Indicator |
+|---|---|---|
+| FCKeditor | `/fckeditor/editor/filemanager/connectors/` | `/fckeditor/_whatsnew.html` |
+| CKEditor | `/ckeditor/` | `/ckeditor/CHANGES.md` |
+| eWebEditor | `/ewebeditor/` | Admin: `/ewebeditor/admin_login.asp` |
+| KindEditor | `/kindeditor/attached/` | `/kindeditor/kindeditor.js` |
+| UEditor | `/ueditor/net/` or `/ueditor/php/` | `/ueditor/ueditor.config.js` |
+
+### Validation Defect Taxonomy (5 Dimensions)
+
+| Dimension | Flaw Examples |
+|---|---|
+| **Location** | Client-side only, inconsistent front/back |
+| **Method** | Extension blacklist (incomplete), MIME check only, magic bytes only |
+| **Logic order** | Renames AFTER execution check, validates BEFORE full upload |
+| **Scope** | Checks filename but not file content, checks first bytes only |
+| **Execution context** | Upload succeeds but different vhost/handler processes the file |
+
+### Response Manipulation Bypass
+
+```
+# If server returns allowedTypes in response for client-side validation:
+# Intercept response → modify allowedTypes to include .php → upload .php
+# The server never actually validates — it trusts client filtering
+```
+
+### IIS Semicolon Parsing
+
+```
+# IIS treats semicolon as parameter delimiter in filenames:
+shell.asp;.jpg    → IIS executes as ASP
+# NTFS Alternate Data Stream:
+shell.asp::$DATA  → Bypasses extension check, IIS may execute
+```
+
+### Apache Multi-Extension
+
+```
+# Apache parses right-to-left for handler:
+shell.php.jpg     → May execute as PHP if AddHandler php applies
+# Newline in filename (CVE-2017-15715):
+shell.php\x0a     → Bypasses regex but Apache still executes as PHP
+```
+
+### Nginx cgi.fix_pathinfo
+
+```
+# With cgi.fix_pathinfo=1 (PHP-FPM):
+/uploads/image.jpg/anything.php → PHP processes image.jpg as PHP!
+# Upload legitimate-looking JPG with PHP code embedded
 ```

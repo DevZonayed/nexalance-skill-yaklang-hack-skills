@@ -306,3 +306,84 @@ cat subdomains.txt | nuclei -t exposures/ -t misconfiguration/ -o exposed.txt
 | SQLi | sqlmap |
 | XSS | dalfox, XSStrike |
 | SSRF | SSRFmap, Gopherus |
+
+---
+
+## 12. JAVA MIDDLEWARE FINGERPRINT MATRIX
+
+| Middleware | Detection Path | Key Indicators |
+|---|---|---|
+| Apache Tomcat | `/manager/html`, `/manager/status` | Default creds: `tomcat:tomcat`, `admin:admin` |
+| JBoss / WildFly | `/jmx-console/`, `/web-console/` | JMX MBean access, WAR deployment |
+| WebLogic | `/console/`, `/wls-wsat/` | T3 protocol on 7001/7002, IIOP |
+| Spring Boot Actuator | `/actuator/`, `/actuator/env`, `/actuator/heapdump` | JSON endpoint listing, heap dump contains secrets |
+| Spring Boot (alt paths) | `/actuator/jolokia`, `/actuator/gateway/routes` | Jolokia JMX bridge, Gateway route injection |
+| Jenkins | `/script`, `/manage` | Groovy console, API token in cookie |
+| GlassFish | `/common/`, `/theme/` | Admin on 4848, default empty password |
+| Jetty | `/jolokia/` | JMX access |
+| Resin | `/resin-admin/` | Admin panel |
+
+### Spring Boot Actuator Exploitation Priority
+
+```
+/actuator/env          → Leak environment variables (DB creds, API keys)
+/actuator/heapdump     → Download JVM heap → search for passwords in memory
+/actuator/jolokia      → JMX → possible RCE via MBean manipulation
+/actuator/gateway/routes → Spring Cloud Gateway → SpEL injection (CVE-2022-22947)
+/actuator/configprops  → All configuration properties
+/actuator/mappings     → All URL mappings (hidden endpoints)
+/actuator/beans        → All Spring beans
+/actuator/shutdown     → POST to shutdown application (DoS)
+```
+
+---
+
+## 13. INFORMATION LEAK DETECTION CHECKLIST
+
+### Version Control & Backup Leaks
+
+```
+/.git/HEAD                    → Git repository exposed
+/.svn/entries                 → SVN metadata
+/.svn/wc.db                   → SVN SQLite database
+/.hg/requires                 → Mercurial
+/.bzr/README                  → Bazaar
+/.DS_Store                    → macOS directory listing
+```
+
+### Backup File Patterns
+
+```
+/backup.zip    /backup.tar.gz    /backup.sql
+/wwwroot.rar   /www.zip          /web.zip
+/db.sql        /database.sql     /dump.sql
+/config.php.bak    /config.php~    /config.php.swp
+/.config.php.swp   /wp-config.php.bak
+/.env          /.env.bak         /.env.production
+```
+
+### API Documentation & Debug
+
+```
+/swagger-ui.html              → Swagger/OpenAPI
+/swagger-ui/                  → Swagger UI
+/api-docs                     → API documentation
+/graphql                      → GraphQL playground
+/graphiql                     → GraphQL IDE
+/debug/                       → Debug endpoints
+/phpinfo.php                  → PHP configuration
+/server-status                → Apache status
+/server-info                  → Apache info
+/nginx_status                 → Nginx status
+```
+
+### Cloud & Infrastructure
+
+```
+/.aws/credentials             → AWS credentials
+/.docker/config.json          → Docker registry auth
+/robots.txt                   → Disallowed paths (hint list)
+/sitemap.xml                  → Full URL listing
+/crossdomain.xml              → Flash cross-domain policy
+/.well-known/                 → Various well-known URIs
+```

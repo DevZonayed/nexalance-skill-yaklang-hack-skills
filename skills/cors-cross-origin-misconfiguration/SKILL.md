@@ -6,7 +6,17 @@ description: >-
 
 # SKILL: CORS Misconfiguration — Credentialed Origins, Reflection, and Trust Boundary Errors
 
-> **AI LOAD INSTRUCTION**: Use this skill when browsers can access authenticated APIs cross-origin. Focus on reflected origins, credentialed requests, wildcard trust, parser mistakes, and origin allowlist bypasses.
+> **AI LOAD INSTRUCTION**: Use this skill when browsers can access authenticated APIs cross-origin. Focus on reflected origins, credentialed requests, wildcard trust, parser mistakes, and origin allowlist bypasses. For JSONP hijacking deep dives, same-origin policy internals, honeypot de-anonymization, and CORS vs JSONP comparison, load the companion [SCENARIOS.md](./SCENARIOS.md).
+
+### Extended Scenarios
+
+Also load [SCENARIOS.md](./SCENARIOS.md) when you need:
+- JSONP hijacking complete attack scenario — watering hole + `<script>` cross-origin data theft
+- Honeypot de-anonymization via JSONP — use social platform JSONP endpoints to identify anonymous visitors
+- Same-origin policy deep dive — protocol/hostname/port definition, `document.domain` subdomain relaxation and its security risks
+- CORS vs JSONP technical comparison — methods, error handling, credential behavior, migration path
+- CORS exploitation payloads — reflected origin with `credentials: include`, null origin via sandboxed iframe
+- Dual-site attack lab pattern — localhost:8981 (target) + localhost:8982 (attacker) testing setup
 
 ## 1. WHEN TO LOAD THIS SKILL
 

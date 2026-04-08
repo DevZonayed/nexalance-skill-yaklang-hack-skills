@@ -60,6 +60,16 @@ description: >-
 | 多步骤交易、优惠券、价格、库存 | Business Logic |
 | MongoDB / JSON 查询语法暴露 | NoSQL Injection |
 | 命令行工具、图像处理、导入器 | Command Injection |
+| HTTP 请求解析异常 / 前后端分帧不一致 | Request Smuggling |
+| Node.js JSON 处理 / `__proto__` 可控 | Prototype Pollution |
+| PHP 弱比较 / 0e hash / 松散条件 | Type Juggling |
+| 同名参数重复 / WAF 与应用解析不一致 | HTTP Parameter Pollution |
+| 一次性操作（优惠券/库存/重置） | Race Condition |
+| XML/XSLT 模板处理 | XSLT Injection |
+| .git/.svn/.env 路径可访问 | Insecure SCM |
+| 导出 CSV/Excel 功能 | CSV Formula Injection |
+| WebSocket 协议升级 | WebSocket Security |
+| 内部包名 / 供应链清单 | Dependency Confusion |
 
 ### Step 3: 使用最可能命中的测试顺序
 
@@ -92,6 +102,16 @@ description: >-
 - [Business Logic Vulnerabilities](../business-logic-vulnerabilities/SKILL.md)
 - [Upload Insecure Files](../upload-insecure-files/SKILL.md)
 - [NoSQL Injection](../nosql-injection/SKILL.md)
+- [Request Smuggling](../request-smuggling/SKILL.md)
+- [Prototype Pollution](../prototype-pollution/SKILL.md)
+- [Type Juggling (PHP)](../type-juggling/SKILL.md)
+- [HTTP Parameter Pollution](../http-parameter-pollution/SKILL.md)
+- [Race Condition](../race-condition/SKILL.md)
+- [XSLT Injection](../xslt-injection/SKILL.md)
+- [Insecure Source Code Management](../insecure-source-code-management/SKILL.md)
+- [CSV Formula Injection](../csv-formula-injection/SKILL.md)
+- [WebSocket Security](../websocket-security/SKILL.md)
+- [Dependency Confusion](../dependency-confusion/SKILL.md)
 
 原先单独拆出的 payload-selection、brute-selection 一类小 skill 已并回对应主 skill，避免入口过多导致 loader 负担和选择噪音。
 

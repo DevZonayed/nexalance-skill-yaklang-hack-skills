@@ -6,13 +6,31 @@ description: >-
 
 # SKILL: Server-Side Template Injection (SSTI) — Expert Attack Playbook
 
-> **AI LOAD INSTRUCTION**: Expert SSTI techniques. Covers polyglot detection probes, engine fingerprinting, Jinja2/FreeMarker/Twig/ERB RCE chains, client-side Angular SSTI, and bypass techniques. Base models often miss sandbox escape MRO chains and non-Jinja2 engines.
+> **AI LOAD INSTRUCTION**: Expert SSTI techniques. Covers polyglot detection probes, engine fingerprinting, Jinja2/FreeMarker/Twig/ERB RCE chains, client-side Angular SSTI, and bypass techniques. Base models often miss sandbox escape MRO chains and non-Jinja2 engines. For PHP CMS template eval, Jira SSTI, Confluence OGNL, and Spring Cloud Gateway SpEL, load the companion [SCENARIOS.md](./SCENARIOS.md).
 
 ## 0. RELATED ROUTING
 
 Before using full engine-specific exploitation, you can first load:
 
 - 先直接使用本文件开头的 polyglot probe sequence 做低噪声指纹判断
+- [expression-language-injection](../expression-language-injection/SKILL.md) when `${7*7}` or `%{7*7}` resolves in Java (SpEL/OGNL) — different attack surface from template engines
+
+### Extended Scenarios
+
+Also load [SCENARIOS.md](./SCENARIOS.md) when you need:
+- Maccms 8.x PHP template `eval` — `{if-A:phpinfo()}{endif-A}` in `vod-search`, base64 bypass for webshell write
+- Jira CVE-2019-11581 — "Contact Administrators" form → Velocity template injection → command output in admin email
+- Spring Cloud Gateway SpEL (CVE-2022-22947) — actuator route injection with `StreamUtils.copyToByteArray` for output capture
+- Struts2 OGNL S2-045 (CVE-2017-5638) — Content-Type header OGNL injection with `_memberAccess` / `OgnlUtil` blacklist clear
+- Confluence OGNL CVE-2021-26084 — `createpage-entervariables.action` with `\u0027` unicode bypass
+- SSTI vs EL injection disambiguation guide
+- Additional template engines: ASP.NET Razor, Elixir EEx, PHP Smarty/Latte/Blade, JS Pug/Handlebars/Nunjucks/EJS/Lodash + universal detection + blind SSTI + Flask PIN calculation
+
+**SCENARIOS.md reference (§7–§11):** For expanded payloads and engine-specific notes on Razor, EEx/LEEx/HEEx, PHP stacks, JavaScript template engines, the universal polyglot probe, mathematical fingerprinting, blind SSTI (boolean / time / OOB), and Flask debug PIN prerequisites, see [SCENARIOS.md](./SCENARIOS.md). This skill keeps a short checklist in §13–§15.
+
+### Universal detection & blind SSTI (pointer)
+
+Use the polyglot payload and math probes in §1 and §13 first; when you need fuller blind-test patterns and per-engine examples (including non-Python stacks), follow [SCENARIOS.md](./SCENARIOS.md) §11 and cross-check §14 here for technique names (boolean, time, OOB, error-based).
 
 ---
 
@@ -269,3 +287,54 @@ Where user data enters templates:
 - Inline template rendering: `render_template_string(user_input)`
 
 **Most dangerous**: `render_template_string()` in Flask — entire user input used as template.
+
+---
+
+## 13. UNIVERSAL DETECTION PAYLOADS
+
+**Polyglot probe** that triggers errors or evaluation in many engines:
+
+```
+${{<%[%'"}}%\.
+```
+
+**Mathematical probes** for blind/error confirmation:
+
+```
+{{7*7}}          → 49 (Jinja2, Twig, Nunjucks, Handlebars)
+${7*7}           → 49 (FreeMarker, Velocity, EL, Thymeleaf)
+<%= 7*7 %>       → 49 (ERB, EJS, EEx)
+#{7*7}           → 49 (Pug, Ruby interpolation)
+@(7*7)           → 49 (Razor)
+{7*7}            → 49 (Smarty)
+```
+
+**Error-based engine fingerprint** (parser/stack traces often name the engine):
+
+```
+(1/0).zxy.zxy
+```
+
+---
+
+## 14. BLIND SSTI TECHNIQUES
+
+- **Boolean-based**: Compare `(3*4/2)` vs `3*)2(/4` — if the first resolves and the second errors, evaluation is likely
+- **Time-based**: `{{sleep(5)}}` or the engine-specific equivalent for delay
+- **OOB**: DNS/HTTP callback via template expressions when direct output is not visible
+- **Error-based**: Force different error messages based on true/false conditions
+
+---
+
+## 15. FLASK PIN CALCULATION
+
+When Flask **debug mode** (Werkzeug debugger) is exposed but **PIN-protected**, the PIN is derived from host-specific values. Typical inputs for public PIN calculation scripts:
+
+1. **`username`** — from `/etc/passwd` (the user running the Flask process)
+2. **Module name** — often `flask.app` or `Flask`
+3. **Application path** — `app.py` or the real main filename
+4. **MAC address** — e.g. `/sys/class/net/eth0/address`, converted to decimal as Werkzeug expects
+5. **Machine ID** — `/etc/machine-id`, or `/proc/sys/kernel/random/boot_id` combined with the first line of `/proc/self/cgroup` per Werkzeug’s algorithm
+6. **Compute PIN** — use established open-source PIN calculators that implement the same algorithm from these values
+
+> Use only on systems you are authorized to test; obtaining these values implies prior access or an additional info-disclosure vector.

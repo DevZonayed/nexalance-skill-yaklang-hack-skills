@@ -27,6 +27,17 @@ description: >-
 - [SSTI Server Side Template Injection](../ssti-server-side-template-injection/SKILL.md)
 - [CMDi Command Injection](../cmdi-command-injection/SKILL.md)
 - [NoSQL Injection](../nosql-injection/SKILL.md)
+- [Deserialization Insecure](../deserialization-insecure/SKILL.md)
+- [JNDI Injection](../jndi-injection/SKILL.md)
+- [Expression Language Injection](../expression-language-injection/SKILL.md)
+- [CRLF Injection](../crlf-injection/SKILL.md)
+- [Extra Injection Types (SSI, LDAP, XPath)](./EXTRA_INJECTION_TYPES.md)
+- [Request Smuggling](../request-smuggling/SKILL.md)
+- [Prototype Pollution](../prototype-pollution/SKILL.md)
+- [Type Juggling](../type-juggling/SKILL.md)
+- [HTTP Parameter Pollution](../http-parameter-pollution/SKILL.md)
+- [XSLT Injection](../xslt-injection/SKILL.md)
+- [CSV Formula Injection](../csv-formula-injection/SKILL.md)
 
 ## Recommended Flow
 

