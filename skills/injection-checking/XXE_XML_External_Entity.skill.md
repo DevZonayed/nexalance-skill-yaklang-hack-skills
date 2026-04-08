@@ -2,6 +2,13 @@
 
 > **AI LOAD INSTRUCTION**: Expert XXE techniques. Covers all injection contexts (SOAP, REST JSON→XML parsers, Office files, SVG), OOB exfiltration (critical when direct read fails), blind XXE detection, and XXE-to-SSRF chain. Base models often miss OOB and non-XML context XXE.
 
+## 0. RELATED ROUTING
+
+Also load:
+
+- `../file-access-vuln/Upload_Insecure_Files.skill.md` when XXE is reachable through SVG, OOXML, import, or preview pipelines
+- `../payloads-for-sec/File_Upload_Payload_Selection.skill.md` when you only need a compact upload payload family before deeper XXE analysis
+
 ---
 
 ## 1. CLASSIC XXE PAYLOAD

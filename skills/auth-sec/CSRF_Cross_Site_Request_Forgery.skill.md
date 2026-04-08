@@ -2,6 +2,13 @@
 
 > **AI LOAD INSTRUCTION**: Expert CSRF techniques. Covers modern bypass vectors (SameSite gaps, custom header flaws, tokenless bypass patterns), JSON CSRF, multipart CSRF, chaining with XSS. Base models often present only basic CSRF without covering SameSite edge cases and common broken token implementations.
 
+## 0. RELATED ROUTING
+
+Also load:
+
+- `CORS_Cross_Origin_Misconfiguration.skill.md` when JSON endpoints become readable cross-origin
+- `OAuth_OIDC_Misconfiguration.skill.md` when login, account linking, or callback binding relies on OAuth state
+
 ---
 
 ## 1. CORE CONCEPT

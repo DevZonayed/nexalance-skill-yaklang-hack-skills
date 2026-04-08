@@ -4,6 +4,22 @@
 
 目标很直接：把真正能在实战里派上用场、又方便审查和持续维护的安全知识，整理成一套可安装、可检索、可组合的 HackSkills。
 
+## 知识来源与蒸馏边界
+
+这个仓库不是外部资料的镜像仓库，而是一个面向 Agent 的蒸馏层。
+
+目前主要参考这些公开知识来源：
+
+- `gh0stkey/Web-Fuzzing-Box`: 提供按场景组织的字典、payload 和 fuzzing 组件，适合蒸馏为分类法和小样本选择策略。
+- `BugBountyBooks`: 提供适合技能化整理的漏洞赏金方法论、测试套路与专题草稿。
+- `swisskyrepo/PayloadsAllTheThings`: 提供高价值 payload 家族、绕过方式和利用链方向，适合蒸馏为场景化索引与方法矩阵。
+
+本仓库对这些内容的处理原则是：
+
+- 不直接搬运超大字典和长 payload 全集。
+- 优先提炼为可路由、可组合、可审查的安全 skill。
+- 用小而稳定的样本、分类法和交叉引用来提升 Agent 在真实安全场景中的稳定性。
+
 ## 快速开始
 
 首选入口是 `hack`：
@@ -47,6 +63,8 @@ hack-skills/
     ├── injection-checking/
     ├── auth-sec/
     ├── api-sec/
+    ├── payloads-for-sec/
+    ├── payloads-for-brute/
     ├── file-access-vuln/
     └── business-logic-vuln/
 ```
@@ -58,7 +76,9 @@ hack-skills/
 - `injection-checking/`: XSS、SQLi、SSRF、XXE、SSTI、CMDi、NoSQL 这一类输入到危险解释器的问题。
 - `auth-sec/`: 登录、会话、JWT、OAuth、CSRF，也包括 IDOR、BOLA、BFLA 这类权限边界问题。
 - `api-sec/`: API 安全专项。
-- `file-access-vuln/`: 路径穿越、LFI、下载接口、文件访问控制。
+- `payloads-for-sec/`: 面向漏洞验证与利用前期的 payload 分类与选型入口。
+- `payloads-for-brute/`: 面向默认凭证、用户名、端口和字典规模选择的轻量索引。
+- `file-access-vuln/`: 路径穿越、LFI、下载接口、文件访问控制，也覆盖 upload workflow、存储路径、预览处理和文件分享边界。
 - `business-logic-vuln/`: 竞态、价格篡改、流程绕过、优惠券和库存类问题。
 
 完整索引见 `skills/BUGBOUNTY_SKILLS.md`。

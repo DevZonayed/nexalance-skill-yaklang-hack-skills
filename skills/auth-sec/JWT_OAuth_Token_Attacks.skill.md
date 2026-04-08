@@ -2,6 +2,14 @@
 
 > **AI LOAD INSTRUCTION**: Expert authentication token attacks. Covers JWT cryptographic attacks (alg:none, RS256→HS256, secret crack, kid/jku injection), OAuth flow attacks (CSRF, open redirect, token theft, implicit flow abuse), PKCE bypass, and token leakage via Referer/logs. This is critical for modern web applications.
 
+## 0. RELATED ROUTING
+
+Use this file for token-centric attacks and flow abuse. Also load:
+
+- `OAuth_OIDC_Misconfiguration.skill.md` for redirect URI, state, nonce, PKCE, and account-binding validation
+- `CORS_Cross_Origin_Misconfiguration.skill.md` when browser-readable APIs or token leakage may exist cross-origin
+- `SAML_SSO_Assertion_Attacks.skill.md` when the target uses enterprise SSO outside OAuth/OIDC
+
 ---
 
 ## 1. JWT ANATOMY

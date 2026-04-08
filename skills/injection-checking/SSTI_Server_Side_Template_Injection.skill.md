@@ -2,6 +2,13 @@
 
 > **AI LOAD INSTRUCTION**: Expert SSTI techniques. Covers polyglot detection probes, engine fingerprinting, Jinja2/FreeMarker/Twig/ERB RCE chains, client-side Angular SSTI, and bypass techniques. Base models often miss sandbox escape MRO chains and non-Jinja2 engines.
 
+## 0. RELATED ROUTING
+
+Before using full engine-specific exploitation, you can first load:
+
+- `../payloads-for-sec/SSTI_Payload_Selection.skill.md` for low-noise probes and engine fingerprinting
+- `../payloads-for-sec/File_Upload_Payload_Selection.skill.md` when the template sink sits behind uploads, previews, or document rendering
+
 ---
 
 ## 1. DETECTION — POLYGLOT PROBE SEQUENCE

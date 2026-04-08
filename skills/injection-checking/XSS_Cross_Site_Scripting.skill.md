@@ -2,6 +2,14 @@
 
 > **AI LOAD INSTRUCTION**: This skill covers non-obvious XSS techniques, context-specific payload selection, WAF bypass, CSP bypass, and post-exploitation. Assume the reader already knows `<script>alert(1)</script>` — this file only covers what base models typically miss.
 
+## 0. RELATED ROUTING
+
+Before broad payload spraying, you can first load:
+
+- `../payloads-for-sec/XSS_Payload_Selection.skill.md` for context-aware quick picks
+- `../payloads-for-sec/File_Upload_Payload_Selection.skill.md` when the XSS surface is a file upload, SVG, or metadata sink
+- `../file-access-vuln/Upload_Insecure_Files.skill.md` when you need the full upload path: validation, storage, preview, and sharing behavior
+
 ---
 
 ## 1. INJECTION CONTEXT MATRIX

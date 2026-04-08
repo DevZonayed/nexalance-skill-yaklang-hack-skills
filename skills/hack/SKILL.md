@@ -83,9 +83,10 @@ metadata:
 
 1. Recon / Methodology
 2. API Security / Auth / IDOR
-3. XSS / SQLi / SSRF / SSTI / XXE
-4. Business Logic / Race Condition
-5. 组合链与提权路径
+3. Payload route selection when needed (`payloads-for-sec` / `payloads-for-brute`)
+4. XSS / SQLi / SSRF / SSTI / XXE
+5. Business Logic / Race Condition
+6. 组合链与提权路径
 
 ## Core Skill Map
 
@@ -103,9 +104,24 @@ metadata:
 - `skills/auth-sec/CSRF_Cross_Site_Request_Forgery.skill.md`
 - `skills/api-sec/API_Security_Testing.skill.md`
 - `skills/auth-sec/JWT_OAuth_Token_Attacks.skill.md`
+- `skills/auth-sec/OAuth_OIDC_Misconfiguration.skill.md`
+- `skills/auth-sec/CORS_Cross_Origin_Misconfiguration.skill.md`
+- `skills/auth-sec/SAML_SSO_Assertion_Attacks.skill.md`
 - `skills/auth-sec/AuthBypass_Authentication_Flaws.skill.md`
 - `skills/business-logic-vuln/BusinessLogic_Vulnerabilities.skill.md`
+- `skills/file-access-vuln/Upload_Insecure_Files.skill.md`
 - `skills/injection-checking/NoSQL_Injection.skill.md`
+
+适合先做路由和载荷选型的轻量索引：
+
+- `skills/payloads-for-sec/SKILL.md`
+- `skills/payloads-for-brute/SKILL.md`
+
+其中：
+
+- `payloads-for-sec` 负责安全测试 payload 分类和小样本选择
+- `payloads-for-brute` 负责默认凭证、用户名、端口和字典规模选择
+- 这两个入口都不承载超大字典，只负责把 Agent 路由到合适的 skill
 
 ## High-Value Expert Intuitions
 
@@ -146,6 +162,7 @@ metadata:
 ## Guidelines
 
 - 优先按目标类型与现象路由，而不是随机枚举 payload。
+- 需要 payload 时，优先加载轻量索引 skill，而不是直接塞大字典。
 - 优先寻找可复用的过滤器、共享组件和跨页面复现路径。
 - 先确认认证边界、授权边界、版本边界，再深入利用。
 - 优先保留可解释、可审查、可复现的测试过程。

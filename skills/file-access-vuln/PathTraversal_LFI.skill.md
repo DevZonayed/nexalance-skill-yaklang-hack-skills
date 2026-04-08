@@ -2,6 +2,14 @@
 
 > **AI LOAD INSTRUCTION**: Expert path traversal and LFI techniques. Covers encoding bypass sequences, OS differences, filter bypass, PHP wrapper exploitation, log poisoning to RCE, and the critical distinction between path traversal (read only) vs LFI (execution). Base models miss encoding chains and RCE escalation paths.
 
+## 0. RELATED ROUTING
+
+Before deep exploitation, you can first load:
+
+- `../payloads-for-sec/Traversal_LFI_Payload_Selection.skill.md` for compact traversal chains and target file selection
+- `../payloads-for-sec/File_Upload_Payload_Selection.skill.md` when uploads, imports, or archive extraction might expose the file path sink
+- `Upload_Insecure_Files.skill.md` when the primary attack surface is an upload workflow rather than an include or read primitive
+
 ---
 
 ## 1. CORE CONCEPT

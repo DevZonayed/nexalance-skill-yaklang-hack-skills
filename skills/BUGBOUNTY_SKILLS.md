@@ -20,9 +20,41 @@
 | api-sec | [api-sec/API_Security_Testing.skill.md](api-sec/API_Security_Testing.skill.md) | API Security | BOLA A-B test, BFLA, mass assignment, JWT attacks, GraphQL, rate limit bypass |
 | auth-sec | [auth-sec/JWT_OAuth_Token_Attacks.skill.md](auth-sec/JWT_OAuth_Token_Attacks.skill.md) | JWT / OAuth | alg:none, RS256→HS256, secret crack, kid injection, OAuth redirect bypass |
 | auth-sec | [auth-sec/AuthBypass_Authentication_Flaws.skill.md](auth-sec/AuthBypass_Authentication_Flaws.skill.md) | Authentication | SQLi login bypass, password reset flaws, 2FA bypass, session management |
+| auth-sec | [auth-sec/OAuth_OIDC_Misconfiguration.skill.md](auth-sec/OAuth_OIDC_Misconfiguration.skill.md) | OAuth / OIDC Misconfiguration | redirect URI, state, nonce, PKCE, account binding, token audience |
+| auth-sec | [auth-sec/CORS_Cross_Origin_Misconfiguration.skill.md](auth-sec/CORS_Cross_Origin_Misconfiguration.skill.md) | CORS Misconfiguration | reflected origin, credentialed CORS, allowlist bypass, readable APIs |
+| auth-sec | [auth-sec/SAML_SSO_Assertion_Attacks.skill.md](auth-sec/SAML_SSO_Assertion_Attacks.skill.md) | SAML SSO | signature validation, assertion wrapping, audience, ACS, binding confusion |
 | business-logic-vuln | [business-logic-vuln/BusinessLogic_Vulnerabilities.skill.md](business-logic-vuln/BusinessLogic_Vulnerabilities.skill.md) | Business Logic | Race conditions, price manipulation, workflow bypass, coupon abuse |
+| file-access-vuln | [file-access-vuln/Upload_Insecure_Files.skill.md](file-access-vuln/Upload_Insecure_Files.skill.md) | Upload Insecure Files | Validation bypass, storage abuse, processing chains, overwrite, preview and sharing bugs |
 | injection-checking | [injection-checking/NoSQL_Injection.skill.md](injection-checking/NoSQL_Injection.skill.md) | NoSQL Injection | MongoDB operator injection, $regex blind extraction, $where JS eval |
 | recon-for-sec | [recon-for-sec/Recon_and_Methodology.skill.md](recon-for-sec/Recon_and_Methodology.skill.md) | Recon / Methodology | Subdomain enum, tech fingerprinting, endpoint discovery, zseano methodology |
+| api-sec | [api-sec/API_Recon_and_Docs.skill.md](api-sec/API_Recon_and_Docs.skill.md) | API Recon | OpenAPI, Swagger, version drift, hidden docs, endpoint surface |
+| api-sec | [api-sec/API_Authorization_and_BOLA.skill.md](api-sec/API_Authorization_and_BOLA.skill.md) | API Authorization | BOLA, BFLA, method abuse, nested resources, mass assignment |
+| api-sec | [api-sec/API_Auth_and_JWT_Abuse.skill.md](api-sec/API_Auth_and_JWT_Abuse.skill.md) | API Auth / JWT | Token trust, header abuse, rate-limit bypass, claim misuse |
+| api-sec | [api-sec/GraphQL_and_Hidden_Parameters.skill.md](api-sec/GraphQL_and_Hidden_Parameters.skill.md) | GraphQL / Hidden Parameters | Introspection, batching, undocumented fields, schema abuse |
+| payloads-for-sec | [payloads-for-sec/SQLi_Payload_Selection.skill.md](payloads-for-sec/SQLi_Payload_Selection.skill.md) | SQLi Payload Selection | DBMS routing, first-pass payloads, time-based vs boolean vs UNION |
+| payloads-for-sec | [payloads-for-sec/XSS_Payload_Selection.skill.md](payloads-for-sec/XSS_Payload_Selection.skill.md) | XSS Payload Selection | Context-aware quick picks, filter bypass families, small stable set |
+| payloads-for-sec | [payloads-for-sec/SSRF_and_URL_Scheme_Payloads.skill.md](payloads-for-sec/SSRF_and_URL_Scheme_Payloads.skill.md) | SSRF Payload Selection | Loopback, metadata, protocol chains, host validation bypass |
+| payloads-for-sec | [payloads-for-sec/Traversal_LFI_Payload_Selection.skill.md](payloads-for-sec/Traversal_LFI_Payload_Selection.skill.md) | Traversal / LFI Payloads | Encoding chains, file targets, wrapper pivot points |
+| payloads-for-sec | [payloads-for-sec/JWT_and_API_Abuse_Payloads.skill.md](payloads-for-sec/JWT_and_API_Abuse_Payloads.skill.md) | JWT / API Abuse Payloads | Header tricks, hidden fields, rate-limit and batch abuse |
+| payloads-for-sec | [payloads-for-sec/File_Upload_Payload_Selection.skill.md](payloads-for-sec/File_Upload_Payload_Selection.skill.md) | File Upload Payloads | Extension tricks, polyglots, SVG/XML abuse, processing targets |
+| payloads-for-sec | [payloads-for-sec/SSTI_Payload_Selection.skill.md](payloads-for-sec/SSTI_Payload_Selection.skill.md) | SSTI Payload Selection | Polyglots, engine fingerprints, low-noise escalation |
+| payloads-for-sec | [payloads-for-sec/CMDi_Payload_Selection.skill.md](payloads-for-sec/CMDi_Payload_Selection.skill.md) | CMDi Payload Selection | Operators, blind probes, OOB checks, bypass families |
+| payloads-for-brute | [payloads-for-brute/Brute_Wordlist_Selection.skill.md](payloads-for-brute/Brute_Wordlist_Selection.skill.md) | Brute Wordlist Selection | Dictionary sizing, staged escalation, service-aware choice |
+| payloads-for-brute | [payloads-for-brute/Default_Credentials_By_Service.skill.md](payloads-for-brute/Default_Credentials_By_Service.skill.md) | Default Credentials | Product-aware small sets, service-first testing |
+| payloads-for-brute | [payloads-for-brute/Username_Generation_and_Variants.skill.md](payloads-for-brute/Username_Generation_and_Variants.skill.md) | Username Variants | Admin patterns, org-derived guesses, locale-aware small sets |
+| payloads-for-brute | [payloads-for-brute/Port_Targeting_for_Brute.skill.md](payloads-for-brute/Port_Targeting_for_Brute.skill.md) | Port Targeting | Service narrowing before brute-force, port-to-credential mapping |
+
+---
+
+## INDEX-TYPE SKILLS
+
+These skills are intentionally lightweight and should be treated as routers or compact payload selectors:
+
+- `api-sec/API_Security_Testing.skill.md`
+- `payloads-for-sec/*.skill.md`
+- `payloads-for-brute/*.skill.md`
+
+Use them to choose the right next file, not as giant static knowledge dumps.
 
 ---
 
@@ -40,7 +72,7 @@
 → Load: XXE, SQLi (for SOAP), SSTI (FreeMarker/Velocity in Java backends)
 
 **File Upload Features**:
-→ Load: XSS (SVG/metadata), PathTraversal_LFI (file path control), CMDi (image processing)
+→ Load: Upload_Insecure_Files, XSS (SVG/metadata), PathTraversal_LFI (file path control), CMDi (image processing)
 
 **Payment / E-commerce**:
 → Load: BusinessLogic_Vulnerabilities, IDOR, API_Security_Testing

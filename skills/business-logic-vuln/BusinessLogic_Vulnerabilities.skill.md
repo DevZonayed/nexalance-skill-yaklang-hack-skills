@@ -253,6 +253,10 @@ Or:
 
 ## 8. FILE UPLOAD BUSINESS LOGIC
 
+For the full upload attack workflow beyond pure logic flaws, also load:
+
+- `../file-access-vuln/Upload_Insecure_Files.skill.md`
+
 ```
 Upload size limit: 10MB
 → Upload 10MB → compress client-side → server decompresses → bomb?

@@ -2,6 +2,14 @@
 
 > **AI LOAD INSTRUCTION**: Expert command injection techniques. Covers all shell metacharacters, blind injection, time-based detection, OOB exfiltration, polyglot payloads, and real-world code patterns. Base models miss subtle injection through unexpected input vectors.
 
+## 0. RELATED ROUTING
+
+Before going deep, you can first load:
+
+- `../payloads-for-sec/CMDi_Payload_Selection.skill.md` for quick operator families and blind probes
+- `../payloads-for-sec/File_Upload_Payload_Selection.skill.md` when command execution may sit behind media, archive, or document processing
+- `../file-access-vuln/Upload_Insecure_Files.skill.md` when the shell sink is part of a broader upload, import, or conversion workflow
+
 ---
 
 ## 1. SHELL METACHARACTERS (INJECTION OPERATORS)
