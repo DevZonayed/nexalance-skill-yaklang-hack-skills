@@ -1,60 +1,77 @@
-# HACKING SKILLS / HackSkills — Master Index
+# HACKING SKILLS / HackSkills — Loader Index
 
-> **AI LOAD INSTRUCTION**: This is the full-repository master index for HACKING SKILLS / HackSkills. Each `.skill.md` file is an AI-optimized attack playbook for one vulnerability class. Load the relevant skill file before testing for that vulnerability type. Do NOT rely on base training knowledge — load the specific skill first for expert-level techniques. For the primary SKILL.md installer entrypoint, see `skills/hack/SKILL.md`.
+> **AI LOAD INSTRUCTION**: This file is the loader-oriented master index for HACKING SKILLS / HackSkills. Prefer the primary entry skill [hack/SKILL.md](./hack/SKILL.md), then a category router, and only then a deep topic skill. Do NOT start from the longest flat list of micro-skills unless the current evidence is already specific.
+
+> Loader note: entry-layer frontmatter names now use stable prefixes: `entry-00-*` for the primary router and `entry-10-*` to `entry-60-*` for category routers. Paths stay unchanged; the prefix only helps grouping and display order.
 
 ---
 
-## SKILL FILES INDEX
+## Primary Entry Skills
+
+| Priority | Skill | Use For | Notes |
+|---|---|---|---|
+| P0 | [hack](./hack/SKILL.md) | 全局路由、阶段判断、跨类别切换 | 推荐默认起点 |
+| P1 | [recon-for-sec](./recon-for-sec/SKILL.md) | 新目标、资产发现、方法论 | 当目标上下文不足时优先 |
+| P1 | [api-sec](./api-sec/SKILL.md) | REST、GraphQL、移动端后端 | API 类问题的分类入口 |
+| P1 | [auth-sec](./auth-sec/SKILL.md) | 登录、JWT、OAuth、IDOR、对象授权 | 认证授权类入口 |
+| P1 | [injection-checking](./injection-checking/SKILL.md) | XSS、SQLi、SSRF、XXE、SSTI、CMDi、NoSQL | 注入类入口 |
+| P1 | [file-access-vuln](./file-access-vuln/SKILL.md) | 上传、下载、路径控制、文件处理链 | 文件访问类入口 |
+| P1 | [business-logic-vuln](./business-logic-vuln/SKILL.md) | 流程、价格、状态机、竞态 | 业务逻辑入口 |
+
+## Category To Topic Map
+
+这些是分类入口下最值得优先下钻的深度专题。原先的 payload-selection、brute-selection 一类短 skill 已并入主 skill，不再保留为独立入口。
+
+| Category | Start Here | Deep Topics |
+|---|---|---|
+| Recon | [recon-for-sec](./recon-for-sec/SKILL.md) | [recon-and-methodology](./recon-and-methodology/SKILL.md) |
+| API | [api-sec](./api-sec/SKILL.md) | [api-recon-and-docs](./api-recon-and-docs/SKILL.md), [api-authorization-and-bola](./api-authorization-and-bola/SKILL.md), [api-auth-and-jwt-abuse](./api-auth-and-jwt-abuse/SKILL.md), [graphql-and-hidden-parameters](./graphql-and-hidden-parameters/SKILL.md) |
+| Auth | [auth-sec](./auth-sec/SKILL.md) | [authbypass-authentication-flaws](./authbypass-authentication-flaws/SKILL.md), [idor-broken-object-authorization](./idor-broken-object-authorization/SKILL.md), [jwt-oauth-token-attacks](./jwt-oauth-token-attacks/SKILL.md), [oauth-oidc-misconfiguration](./oauth-oidc-misconfiguration/SKILL.md), [cors-cross-origin-misconfiguration](./cors-cross-origin-misconfiguration/SKILL.md), [saml-sso-assertion-attacks](./saml-sso-assertion-attacks/SKILL.md) |
+| Injection | [injection-checking](./injection-checking/SKILL.md) | [xss-cross-site-scripting](./xss-cross-site-scripting/SKILL.md), [sqli-sql-injection](./sqli-sql-injection/SKILL.md), [ssrf-server-side-request-forgery](./ssrf-server-side-request-forgery/SKILL.md), [xxe-xml-external-entity](./xxe-xml-external-entity/SKILL.md), [ssti-server-side-template-injection](./ssti-server-side-template-injection/SKILL.md), [cmdi-command-injection](./cmdi-command-injection/SKILL.md), [nosql-injection](./nosql-injection/SKILL.md) |
+| File Access | [file-access-vuln](./file-access-vuln/SKILL.md) | [upload-insecure-files](./upload-insecure-files/SKILL.md), [path-traversal-lfi](./path-traversal-lfi/SKILL.md) |
+| Business Logic | [business-logic-vuln](./business-logic-vuln/SKILL.md) | [business-logic-vulnerabilities](./business-logic-vulnerabilities/SKILL.md) |
+
+## Deep Topic Index
+
+当现象已经非常明确时，再直接加载这些深度专题 skill：
 
 | Category | File | Vulnerability Class | Key Topics |
 |---|---|---|---|
-| injection-checking | [injection-checking/XSS_Cross_Site_Scripting.skill.md](injection-checking/XSS_Cross_Site_Scripting.skill.md) | Cross-Site Scripting | Context matrix, multi-reflection, CSP bypass, blind XSS, WP→RCE, WAF bypass |
-| injection-checking | [injection-checking/SQLi_SQL_Injection.skill.md](injection-checking/SQLi_SQL_Injection.skill.md) | SQL Injection | OOB exfil (Oracle UTL, MSSQL OpenRowSet), second-order, xp_cmdshell, blind |
-| injection-checking | [injection-checking/SSRF_Server_Side_Request_Forgery.skill.md](injection-checking/SSRF_Server_Side_Request_Forgery.skill.md) | SSRF | Cloud metadata, IP encoding bypass, gopher/dict/file protocols, Redis via SSRF |
-| injection-checking | [injection-checking/XXE_XML_External_Entity.skill.md](injection-checking/XXE_XML_External_Entity.skill.md) | XXE | OOB DTD exfil, SVG/Office XXE, XInclude, XXE→SSRF chain |
-| injection-checking | [injection-checking/SSTI_Server_Side_Template_Injection.skill.md](injection-checking/SSTI_Server_Side_Template_Injection.skill.md) | SSTI | Polyglot probes, Jinja2 MRO chain, FreeMarker/Twig/ERB/Thymeleaf, Angular CSTI |
-| auth-sec | [auth-sec/IDOR_Broken_Object_Authorization.skill.md](auth-sec/IDOR_Broken_Object_Authorization.skill.md) | IDOR/BOLA/BFLA | A-B testing, all ID locations, HTTP method escalation, mass assignment |
-| injection-checking | [injection-checking/CMDi_Command_Injection.skill.md](injection-checking/CMDi_Command_Injection.skill.md) | OS Command Injection | All metacharacters, blind detection, OOB, reverse shells, filter bypass |
-| file-access-vuln | [file-access-vuln/PathTraversal_LFI.skill.md](file-access-vuln/PathTraversal_LFI.skill.md) | Path Traversal / LFI | Encoding chains, PHP wrappers (filter/input/data), log poisoning→RCE |
-| auth-sec | [auth-sec/CSRF_Cross_Site_Request_Forgery.skill.md](auth-sec/CSRF_Cross_Site_Request_Forgery.skill.md) | CSRF | Token bypass patterns, SameSite bypass, JSON CSRF, OAuth state CSRF |
-| api-sec | [api-sec/API_Security_Testing.skill.md](api-sec/API_Security_Testing.skill.md) | API Security | BOLA A-B test, BFLA, mass assignment, JWT attacks, GraphQL, rate limit bypass |
-| auth-sec | [auth-sec/JWT_OAuth_Token_Attacks.skill.md](auth-sec/JWT_OAuth_Token_Attacks.skill.md) | JWT / OAuth | alg:none, RS256→HS256, secret crack, kid injection, OAuth redirect bypass |
-| auth-sec | [auth-sec/AuthBypass_Authentication_Flaws.skill.md](auth-sec/AuthBypass_Authentication_Flaws.skill.md) | Authentication | SQLi login bypass, password reset flaws, 2FA bypass, session management |
-| auth-sec | [auth-sec/OAuth_OIDC_Misconfiguration.skill.md](auth-sec/OAuth_OIDC_Misconfiguration.skill.md) | OAuth / OIDC Misconfiguration | redirect URI, state, nonce, PKCE, account binding, token audience |
-| auth-sec | [auth-sec/CORS_Cross_Origin_Misconfiguration.skill.md](auth-sec/CORS_Cross_Origin_Misconfiguration.skill.md) | CORS Misconfiguration | reflected origin, credentialed CORS, allowlist bypass, readable APIs |
-| auth-sec | [auth-sec/SAML_SSO_Assertion_Attacks.skill.md](auth-sec/SAML_SSO_Assertion_Attacks.skill.md) | SAML SSO | signature validation, assertion wrapping, audience, ACS, binding confusion |
-| business-logic-vuln | [business-logic-vuln/BusinessLogic_Vulnerabilities.skill.md](business-logic-vuln/BusinessLogic_Vulnerabilities.skill.md) | Business Logic | Race conditions, price manipulation, workflow bypass, coupon abuse |
-| file-access-vuln | [file-access-vuln/Upload_Insecure_Files.skill.md](file-access-vuln/Upload_Insecure_Files.skill.md) | Upload Insecure Files | Validation bypass, storage abuse, processing chains, overwrite, preview and sharing bugs |
-| injection-checking | [injection-checking/NoSQL_Injection.skill.md](injection-checking/NoSQL_Injection.skill.md) | NoSQL Injection | MongoDB operator injection, $regex blind extraction, $where JS eval |
-| recon-for-sec | [recon-for-sec/Recon_and_Methodology.skill.md](recon-for-sec/Recon_and_Methodology.skill.md) | Recon / Methodology | Subdomain enum, tech fingerprinting, endpoint discovery, zseano methodology |
-| api-sec | [api-sec/API_Recon_and_Docs.skill.md](api-sec/API_Recon_and_Docs.skill.md) | API Recon | OpenAPI, Swagger, version drift, hidden docs, endpoint surface |
-| api-sec | [api-sec/API_Authorization_and_BOLA.skill.md](api-sec/API_Authorization_and_BOLA.skill.md) | API Authorization | BOLA, BFLA, method abuse, nested resources, mass assignment |
-| api-sec | [api-sec/API_Auth_and_JWT_Abuse.skill.md](api-sec/API_Auth_and_JWT_Abuse.skill.md) | API Auth / JWT | Token trust, header abuse, rate-limit bypass, claim misuse |
-| api-sec | [api-sec/GraphQL_and_Hidden_Parameters.skill.md](api-sec/GraphQL_and_Hidden_Parameters.skill.md) | GraphQL / Hidden Parameters | Introspection, batching, undocumented fields, schema abuse |
-| payloads-for-sec | [payloads-for-sec/SQLi_Payload_Selection.skill.md](payloads-for-sec/SQLi_Payload_Selection.skill.md) | SQLi Payload Selection | DBMS routing, first-pass payloads, time-based vs boolean vs UNION |
-| payloads-for-sec | [payloads-for-sec/XSS_Payload_Selection.skill.md](payloads-for-sec/XSS_Payload_Selection.skill.md) | XSS Payload Selection | Context-aware quick picks, filter bypass families, small stable set |
-| payloads-for-sec | [payloads-for-sec/SSRF_and_URL_Scheme_Payloads.skill.md](payloads-for-sec/SSRF_and_URL_Scheme_Payloads.skill.md) | SSRF Payload Selection | Loopback, metadata, protocol chains, host validation bypass |
-| payloads-for-sec | [payloads-for-sec/Traversal_LFI_Payload_Selection.skill.md](payloads-for-sec/Traversal_LFI_Payload_Selection.skill.md) | Traversal / LFI Payloads | Encoding chains, file targets, wrapper pivot points |
-| payloads-for-sec | [payloads-for-sec/JWT_and_API_Abuse_Payloads.skill.md](payloads-for-sec/JWT_and_API_Abuse_Payloads.skill.md) | JWT / API Abuse Payloads | Header tricks, hidden fields, rate-limit and batch abuse |
-| payloads-for-sec | [payloads-for-sec/File_Upload_Payload_Selection.skill.md](payloads-for-sec/File_Upload_Payload_Selection.skill.md) | File Upload Payloads | Extension tricks, polyglots, SVG/XML abuse, processing targets |
-| payloads-for-sec | [payloads-for-sec/SSTI_Payload_Selection.skill.md](payloads-for-sec/SSTI_Payload_Selection.skill.md) | SSTI Payload Selection | Polyglots, engine fingerprints, low-noise escalation |
-| payloads-for-sec | [payloads-for-sec/CMDi_Payload_Selection.skill.md](payloads-for-sec/CMDi_Payload_Selection.skill.md) | CMDi Payload Selection | Operators, blind probes, OOB checks, bypass families |
-| payloads-for-brute | [payloads-for-brute/Brute_Wordlist_Selection.skill.md](payloads-for-brute/Brute_Wordlist_Selection.skill.md) | Brute Wordlist Selection | Dictionary sizing, staged escalation, service-aware choice |
-| payloads-for-brute | [payloads-for-brute/Default_Credentials_By_Service.skill.md](payloads-for-brute/Default_Credentials_By_Service.skill.md) | Default Credentials | Product-aware small sets, service-first testing |
-| payloads-for-brute | [payloads-for-brute/Username_Generation_and_Variants.skill.md](payloads-for-brute/Username_Generation_and_Variants.skill.md) | Username Variants | Admin patterns, org-derived guesses, locale-aware small sets |
-| payloads-for-brute | [payloads-for-brute/Port_Targeting_for_Brute.skill.md](payloads-for-brute/Port_Targeting_for_Brute.skill.md) | Port Targeting | Service narrowing before brute-force, port-to-credential mapping |
+| injection-checking | [./xss-cross-site-scripting/SKILL.md](./xss-cross-site-scripting/SKILL.md) | Cross-Site Scripting | Context matrix, multi-reflection, CSP bypass, blind XSS, WP→RCE, WAF bypass |
+| injection-checking | [./sqli-sql-injection/SKILL.md](./sqli-sql-injection/SKILL.md) | SQL Injection | OOB exfil (Oracle UTL, MSSQL OpenRowSet), second-order, xp_cmdshell, blind |
+| injection-checking | [./ssrf-server-side-request-forgery/SKILL.md](./ssrf-server-side-request-forgery/SKILL.md) | SSRF | Cloud metadata, IP encoding bypass, gopher/dict/file protocols, Redis via SSRF |
+| injection-checking | [./xxe-xml-external-entity/SKILL.md](./xxe-xml-external-entity/SKILL.md) | XXE | OOB DTD exfil, SVG/Office XXE, XInclude, XXE→SSRF chain |
+| injection-checking | [./ssti-server-side-template-injection/SKILL.md](./ssti-server-side-template-injection/SKILL.md) | SSTI | Polyglot probes, Jinja2 MRO chain, FreeMarker/Twig/ERB/Thymeleaf, Angular CSTI |
+| auth-sec | [./idor-broken-object-authorization/SKILL.md](./idor-broken-object-authorization/SKILL.md) | IDOR/BOLA/BFLA | A-B testing, all ID locations, HTTP method escalation, mass assignment |
+| injection-checking | [./cmdi-command-injection/SKILL.md](./cmdi-command-injection/SKILL.md) | OS Command Injection | All metacharacters, blind detection, OOB, reverse shells, filter bypass |
+| file-access-vuln | [./path-traversal-lfi/SKILL.md](./path-traversal-lfi/SKILL.md) | Path Traversal / LFI | Encoding chains, PHP wrappers (filter/input/data), log poisoning→RCE |
+| auth-sec | [./csrf-cross-site-request-forgery/SKILL.md](./csrf-cross-site-request-forgery/SKILL.md) | CSRF | Token bypass patterns, SameSite bypass, JSON CSRF, OAuth state CSRF |
+| auth-sec | [./jwt-oauth-token-attacks/SKILL.md](./jwt-oauth-token-attacks/SKILL.md) | JWT / OAuth | alg:none, RS256→HS256, secret crack, kid injection, OAuth redirect bypass |
+| auth-sec | [./authbypass-authentication-flaws/SKILL.md](./authbypass-authentication-flaws/SKILL.md) | Authentication | SQLi login bypass, password reset flaws, 2FA bypass, session management |
+| auth-sec | [./oauth-oidc-misconfiguration/SKILL.md](./oauth-oidc-misconfiguration/SKILL.md) | OAuth / OIDC Misconfiguration | redirect URI, state, nonce, PKCE, account binding, token audience |
+| auth-sec | [./cors-cross-origin-misconfiguration/SKILL.md](./cors-cross-origin-misconfiguration/SKILL.md) | CORS Misconfiguration | reflected origin, credentialed CORS, allowlist bypass, readable APIs |
+| auth-sec | [./saml-sso-assertion-attacks/SKILL.md](./saml-sso-assertion-attacks/SKILL.md) | SAML SSO | signature validation, assertion wrapping, audience, ACS, binding confusion |
+| business-logic-vuln | [./business-logic-vulnerabilities/SKILL.md](./business-logic-vulnerabilities/SKILL.md) | Business Logic | Race conditions, price manipulation, workflow bypass, coupon abuse |
+| file-access-vuln | [./upload-insecure-files/SKILL.md](./upload-insecure-files/SKILL.md) | Upload Insecure Files | Validation bypass, storage abuse, processing chains, overwrite, preview and sharing bugs |
+| injection-checking | [./nosql-injection/SKILL.md](./nosql-injection/SKILL.md) | NoSQL Injection | MongoDB operator injection, $regex blind extraction, $where JS eval |
+| recon-for-sec | [./recon-and-methodology/SKILL.md](./recon-and-methodology/SKILL.md) | Recon / Methodology | Subdomain enum, tech fingerprinting, endpoint discovery, zseano methodology |
+| api-sec | [./api-recon-and-docs/SKILL.md](./api-recon-and-docs/SKILL.md) | API Recon | OpenAPI, Swagger, version drift, hidden docs, endpoint surface |
+| api-sec | [./api-authorization-and-bola/SKILL.md](./api-authorization-and-bola/SKILL.md) | API Authorization | BOLA, BFLA, method abuse, nested resources, mass assignment |
+| api-sec | [./api-auth-and-jwt-abuse/SKILL.md](./api-auth-and-jwt-abuse/SKILL.md) | API Auth / JWT | Token trust, header abuse, rate-limit bypass, claim misuse |
+| api-sec | [./graphql-and-hidden-parameters/SKILL.md](./graphql-and-hidden-parameters/SKILL.md) | GraphQL / Hidden Parameters | Introspection, batching, undocumented fields, schema abuse |
 
 ---
 
-## INDEX-TYPE SKILLS
+## Entry Reduction Note
 
-These skills are intentionally lightweight and should be treated as routers or compact payload selectors:
+为减少 loader 入口噪音，以下类型的独立 skill 已并入主 skill：
 
-- `api-sec/API_Security_Testing.skill.md`
-- `payloads-for-sec/*.skill.md`
-- `payloads-for-brute/*.skill.md`
+- payload selection
+- brute selection
+- default credentials / username generation / port targeting
+- API 中间路由型轻量 skill
 
-Use them to choose the right next file, not as giant static knowledge dumps.
+现在优先保留三层：`hack` 总入口、分类入口、深度专题。
 
 ---
 
@@ -62,44 +79,33 @@ Use them to choose the right next file, not as giant static knowledge dumps.
 
 ### By Target Type
 
-**Web App (traditional)**:
-→ Load: XSS, SQLi, SSTI, CSRF, AuthBypass, PathTraversal, IDOR
-
-**REST API / Mobile Backend**:
-→ Load: API_Security_Testing, JWT_OAuth_Token_Attacks, IDOR, CSRF
-
-**XML/SOAP Services**:
-→ Load: XXE, SQLi (for SOAP), SSTI (FreeMarker/Velocity in Java backends)
-
-**File Upload Features**:
-→ Load: Upload_Insecure_Files, XSS (SVG/metadata), PathTraversal_LFI (file path control), CMDi (image processing)
-
-**Payment / E-commerce**:
-→ Load: BusinessLogic_Vulnerabilities, IDOR, API_Security_Testing
-
-**Admin Panels**:
-→ Load: AuthBypass, BFLA (in IDOR skill), SQLi, XSS
-
-**Node.js / MongoDB Stack**:
-→ Load: NoSQL_Injection, XSS, SSTI (Jade/Pug), CMDi
+| Target Type | Start With | Then Consider |
+|---|---|---|
+| Web App (traditional) | [injection-checking](./injection-checking/SKILL.md) | XSS, SQLi, SSTI, CSRF, Path Traversal, IDOR |
+| REST API / Mobile Backend | [api-sec](./api-sec/SKILL.md) | API Security Testing, JWT/OAuth, IDOR, CSRF |
+| XML/SOAP Services | [injection-checking](./injection-checking/SKILL.md) | XXE, SQLi, SSTI |
+| File Upload Features | [file-access-vuln](./file-access-vuln/SKILL.md) | Upload Insecure Files, XSS, Path Traversal, CMDi |
+| Payment / E-commerce | [business-logic-vuln](./business-logic-vuln/SKILL.md) | Business Logic, IDOR, API Security |
+| Admin Panels | [auth-sec](./auth-sec/SKILL.md) | Authentication Bypass, BFLA/IDOR, SQLi, XSS |
+| Node.js / MongoDB Stack | [injection-checking](./injection-checking/SKILL.md) | NoSQL Injection, XSS, SSTI, CMDi |
 
 ### By Observed Behavior
 
-| Observation | Load Skill |
-|---|---|
-| Input reflected in HTML | XSS |
-| Input in `<script>` tag | XSS (JS context) |
-| Template expression: `{{7*7}}` | SSTI |
-| Server makes outbound request | SSRF |
-| XML accepted / parsed | XXE |
-| File path in URL parameter | PathTraversal_LFI |
-| Server executes system command | CMDi |
-| API with object IDs | IDOR |
-| Login endpoint | AuthBypass + SQLi |
-| JWT token visible | JWT_OAuth |
-| Multi-step payment/workflow | BusinessLogic |
-| MongoDB backend | NoSQL_Injection |
-| New program, unknown surface | Recon_and_Methodology first |
+| Observation | Start With | Then Consider |
+|---|---|---|
+| Input reflected in HTML | [injection-checking](./injection-checking/SKILL.md) | XSS |
+| Input in `<script>` tag | [injection-checking](./injection-checking/SKILL.md) | XSS (JS context) |
+| Template expression: `{{7*7}}` | [injection-checking](./injection-checking/SKILL.md) | SSTI |
+| Server makes outbound request | [injection-checking](./injection-checking/SKILL.md) | SSRF |
+| XML accepted / parsed | [injection-checking](./injection-checking/SKILL.md) | XXE |
+| File path in URL parameter | [file-access-vuln](./file-access-vuln/SKILL.md) | Path Traversal / LFI |
+| Server executes system command | [injection-checking](./injection-checking/SKILL.md) | CMDi |
+| API with object IDs | [api-sec](./api-sec/SKILL.md) | BOLA / IDOR |
+| Login endpoint | [auth-sec](./auth-sec/SKILL.md) | Authentication Bypass, SQLi |
+| JWT token visible | [auth-sec](./auth-sec/SKILL.md) | JWT / OAuth |
+| Multi-step payment/workflow | [business-logic-vuln](./business-logic-vuln/SKILL.md) | Business Logic |
+| MongoDB backend | [injection-checking](./injection-checking/SKILL.md) | NoSQL Injection |
+| New program, unknown surface | [recon-for-sec](./recon-for-sec/SKILL.md) | Recon and Methodology |
 
 ---
 

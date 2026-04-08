@@ -1,28 +1,10 @@
 ---
-name: hack
+name: entry-00-hack
 description: >-
-  HACKING SKILLS / HackSkills for web security engineers, authorized testers,
-  red team learners, and security-focused agents. Use when the task involves
-  web application testing, API security assessment, recon, vulnerability
-  triage, exploit path planning, or choosing the right security methodology.
-  Knowledge-base-first, safety-reviewed, and optimized for SKILL.md-compatible
-  tools.
-compatibility: >-
-  Works with SKILL.md-compatible agent tools such as Claude Code, Codex,
-  Gemini CLI, Cursor, and other GitHub/raw-URL based installers.
-metadata:
-  author: yaklang
-  version: "1.0.0"
-  category: security
-  tags:
-    - hackskills
-    - hacking-skills
-    - bug-bounty
-    - bugbounty
-    - 赏金猎人
-    - web-security
-    - api-security
-    - agent-skills
+  Entry P0 primary router for HackSkills. Use when the task involves web
+  application testing, API security assessment, recon, vulnerability triage,
+  exploit path planning, or choosing the right next category skill before any
+  deep topic skill.
 ---
 
 # HACKING SKILLS / HackSkills
@@ -83,45 +65,35 @@ metadata:
 
 1. Recon / Methodology
 2. API Security / Auth / IDOR
-3. Payload route selection when needed (`payloads-for-sec` / `payloads-for-brute`)
-4. XSS / SQLi / SSRF / SSTI / XXE
-5. Business Logic / Race Condition
-6. 组合链与提权路径
+3. XSS / SQLi / SSRF / SSTI / XXE
+4. Business Logic / Race Condition
+5. 组合链与提权路径
 
 ## Core Skill Map
 
 如果你拥有完整仓库，优先结合这些专题文档一起使用：
 
-- `skills/recon-for-sec/Recon_and_Methodology.skill.md`
-- `skills/injection-checking/XSS_Cross_Site_Scripting.skill.md`
-- `skills/injection-checking/SQLi_SQL_Injection.skill.md`
-- `skills/injection-checking/SSRF_Server_Side_Request_Forgery.skill.md`
-- `skills/injection-checking/XXE_XML_External_Entity.skill.md`
-- `skills/injection-checking/SSTI_Server_Side_Template_Injection.skill.md`
-- `skills/auth-sec/IDOR_Broken_Object_Authorization.skill.md`
-- `skills/injection-checking/CMDi_Command_Injection.skill.md`
-- `skills/file-access-vuln/PathTraversal_LFI.skill.md`
-- `skills/auth-sec/CSRF_Cross_Site_Request_Forgery.skill.md`
-- `skills/api-sec/API_Security_Testing.skill.md`
-- `skills/auth-sec/JWT_OAuth_Token_Attacks.skill.md`
-- `skills/auth-sec/OAuth_OIDC_Misconfiguration.skill.md`
-- `skills/auth-sec/CORS_Cross_Origin_Misconfiguration.skill.md`
-- `skills/auth-sec/SAML_SSO_Assertion_Attacks.skill.md`
-- `skills/auth-sec/AuthBypass_Authentication_Flaws.skill.md`
-- `skills/business-logic-vuln/BusinessLogic_Vulnerabilities.skill.md`
-- `skills/file-access-vuln/Upload_Insecure_Files.skill.md`
-- `skills/injection-checking/NoSQL_Injection.skill.md`
+- [Recon and Methodology](../recon-and-methodology/SKILL.md)
+- [XSS Cross Site Scripting](../xss-cross-site-scripting/SKILL.md)
+- [SQLi SQL Injection](../sqli-sql-injection/SKILL.md)
+- [SSRF Server Side Request Forgery](../ssrf-server-side-request-forgery/SKILL.md)
+- [XXE XML External Entity](../xxe-xml-external-entity/SKILL.md)
+- [SSTI Server Side Template Injection](../ssti-server-side-template-injection/SKILL.md)
+- [IDOR Broken Object Authorization](../idor-broken-object-authorization/SKILL.md)
+- [CMDi Command Injection](../cmdi-command-injection/SKILL.md)
+- [Path Traversal LFI](../path-traversal-lfi/SKILL.md)
+- [CSRF Cross Site Request Forgery](../csrf-cross-site-request-forgery/SKILL.md)
+- [API Security Router](../api-sec/SKILL.md)
+- [JWT OAuth Token Attacks](../jwt-oauth-token-attacks/SKILL.md)
+- [OAuth OIDC Misconfiguration](../oauth-oidc-misconfiguration/SKILL.md)
+- [CORS Cross Origin Misconfiguration](../cors-cross-origin-misconfiguration/SKILL.md)
+- [SAML SSO Assertion Attacks](../saml-sso-assertion-attacks/SKILL.md)
+- [Authentication Bypass](../authbypass-authentication-flaws/SKILL.md)
+- [Business Logic Vulnerabilities](../business-logic-vulnerabilities/SKILL.md)
+- [Upload Insecure Files](../upload-insecure-files/SKILL.md)
+- [NoSQL Injection](../nosql-injection/SKILL.md)
 
-适合先做路由和载荷选型的轻量索引：
-
-- `skills/payloads-for-sec/SKILL.md`
-- `skills/payloads-for-brute/SKILL.md`
-
-其中：
-
-- `payloads-for-sec` 负责安全测试 payload 分类和小样本选择
-- `payloads-for-brute` 负责默认凭证、用户名、端口和字典规模选择
-- 这两个入口都不承载超大字典，只负责把 Agent 路由到合适的 skill
+原先单独拆出的 payload-selection、brute-selection 一类小 skill 已并回对应主 skill，避免入口过多导致 loader 负担和选择噪音。
 
 ## High-Value Expert Intuitions
 
@@ -162,7 +134,7 @@ metadata:
 ## Guidelines
 
 - 优先按目标类型与现象路由，而不是随机枚举 payload。
-- 需要 payload 时，优先加载轻量索引 skill，而不是直接塞大字典。
+- 需要 payload 时，优先使用对应主 skill 里的 quick start / first-pass 样本，而不是再跳一个中间入口。
 - 优先寻找可复用的过滤器、共享组件和跨页面复现路径。
 - 先确认认证边界、授权边界、版本边界，再深入利用。
 - 优先保留可解释、可审查、可复现的测试过程。
