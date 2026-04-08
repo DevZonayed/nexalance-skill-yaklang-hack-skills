@@ -1,12 +1,12 @@
 ---
 name: hack
 description: >-
-  HACKING SKILLS / HackSkills for bug bounty hunters, web security engineers,
+  HACKING SKILLS / HackSkills for web security engineers, authorized testers,
   red team learners, and security-focused agents. Use when the task involves
-  authorized web application testing, API security assessment, recon,
-  vulnerability triage, exploit path planning, or choosing the right security
-  methodology. Knowledge-base-first, safety-reviewed, and optimized for
-  SKILL.md-compatible tools.
+  web application testing, API security assessment, recon, vulnerability
+  triage, exploit path planning, or choosing the right security methodology.
+  Knowledge-base-first, safety-reviewed, and optimized for SKILL.md-compatible
+  tools.
 compatibility: >-
   Works with SKILL.md-compatible agent tools such as Claude Code, Codex,
   Gemini CLI, Cursor, and other GitHub/raw-URL based installers.
@@ -19,14 +19,13 @@ metadata:
     - hacking-skills
     - bug-bounty
     - bugbounty
-    - bug-bounty-hunter
     - 赏金猎人
     - web-security
     - api-security
     - agent-skills
 ---
 
-# HACKING SKILLS / HackSkills — Bug Bounty Hunter
+# HACKING SKILLS / HackSkills
 
 ## Overview
 
@@ -142,7 +141,6 @@ metadata:
 - `HackSkills`
 - `HACKING SKILLS`
 - `bug bounty`
-- `bug bounty hunter`
 - `赏金猎人`
 
 ## Guidelines
