@@ -33,9 +33,13 @@ output_zip = cli.String("output", cli.setDefault("hack-skills.zip"), cli.setHelp
 // 关键词: 默认密码, hack-skills 常量
 password = cli.String("password", cli.setDefault(DEFAULT_PASSWORD), cli.setHelp("zip encryption password (default: hack-skills, public constant for AV-evasion only)"))
 src_dir = cli.String("src", cli.setDefault("skills"), cli.setHelp("source directory to pack"))
+// version 字符串将被写入 zip 根级 version.txt，作为 yaklang thirdparty_bin 的 IsInstalled 锚点
+// 关键词: --version 参数, version.txt manifest, IsInstalled anchor, thirdparty_bin
+version_str = cli.String("version", cli.setDefault("dev"), cli.setHelp("version string written into zip-internal version.txt manifest, also acts as yaklang thirdparty_bin IsInstalled anchor"))
 cli.check()
 
 assert password != "", "password must not be empty"
+assert version_str != "", "version string must not be empty"
 
 // 解析项目根目录与源目录
 // 关键词: os.Getwd, file.Join, 路径计算
@@ -124,6 +128,17 @@ log.info("collected %d files, skipped %d non-skill entries", total_files, skippe
 assert total_files > 0, "no skill markdown collected, refuse to build empty zip"
 assert total_size > 0, "total content size must be greater than zero"
 
+// 注入根级 version.txt manifest
+// 这个文件 *不是* 普通业务内容，而是 yaklang thirdparty_bin 的 IsInstalled 锚点：
+// 解压后位于 ~/yakit-projects/ai-skills/hack-skills/version.txt，bin_cfg.yml 把它作为
+// bin_path 探测目标（GetFirstExistedFile 会跳过目录，必须是真实文件）。
+// 同时也方便用户/CI 在本地直接 cat 出当前安装版本号。
+// 关键词: version.txt manifest, IsInstalled anchor, thirdparty_bin bin_path, 根级 manifest
+manifest_payload = version_str + "\n"
+collected_files["version.txt"] = manifest_payload
+total_size += len(manifest_payload)
+log.info("injected manifest: version.txt (%d bytes, version=%s)", len(manifest_payload), version_str)
+
 // AES-256 加密压缩
 // 关键词: zip.CompressRawWithPassword, AES256, 加密压缩
 log.info("compressing with AES-256 encryption")
@@ -175,6 +190,18 @@ if extract_err != nil {
 assert string(extracted_bytes) == collected_files[sample_key], "extracted content must match original"
 log.info("verification ok: %s extracted with correct password", sample_key)
 
+// 额外验证：根级 version.txt 必须能用同密码解出，且内容等于 --version 入参
+// 关键词: version.txt 锚点验证, IsInstalled anchor 自检
+manifest_bytes, manifest_err = zip.ExtractFileFromRawWithOptions(encrypted_data, "version.txt",
+    zip.extractPassword(password),
+)
+if manifest_err != nil {
+    log.error("manifest version.txt verification failed: %v", manifest_err)
+    assert false, f"manifest extract failed: ${manifest_err}"
+}
+assert string(manifest_bytes) == manifest_payload, "version.txt content must equal --version argument plus newline"
+log.info("manifest ok: version.txt content == %q", string(manifest_bytes))
+
 // 反向验证：错误密码应当失败（任意一个：解压报错，或返回内容不一致）
 // 关键词: 反向验证, 错误密码失败检查
 wrong_password = password + "_wrong"
@@ -208,7 +235,9 @@ for file_path, _ in collected_files {
 }
 
 log.info("=== build summary ===")
-log.info("total files: %d", total_files)
+log.info("total files: %d (incl. version.txt manifest)", total_files+1)
+log.info("skill files: %d", total_files)
+log.info("manifest version: %s", version_str)
 log.info("original size: %d bytes", total_size)
 log.info("compressed size: %d bytes", compressed_size)
 log.info("output: %s", output_zip)

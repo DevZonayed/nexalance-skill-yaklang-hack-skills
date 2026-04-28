@@ -106,11 +106,14 @@ jobs:
           echo "=== Building hack-skills zip ==="
           # 加密目的: 仅为绕过杀软对明文 .md 的内容启发式扫描
           # 密码 hack-skills 是公开常量, 详见 workflow 顶部 env 注释
-          # 关键词: AES256 打包, 公开密码, anti-AV
+          # --version 写入 zip 内 version.txt manifest, 同时也是 yaklang
+          # thirdparty_bin install 的 IsInstalled anchor (bin_path)
+          # 关键词: AES256 打包, 公开密码, anti-AV, version.txt manifest, IsInstalled anchor
           ./yak scripts/build-hack-skills-zip.yak \
             --src skills \
             --output "${ZIP_BASENAME}" \
-            --password "${ZIP_PASSWORD}"
+            --password "${ZIP_PASSWORD}" \
+            --version "${{ steps.meta.outputs.version }}"
 
           test -f "${ZIP_BASENAME}"
           ls -lh "${ZIP_BASENAME}"
