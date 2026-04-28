@@ -1,0 +1,199 @@
+// =============================================================================
+// hack-skills 加密打包脚本
+// 功能: 递归收集 skills/ 目录下的 SKILL 内容（仅 .md 文件），
+//       使用 AES-256 加密压缩为单个 zip 文件
+// 用途: GitHub Actions CI 中的打包步骤，发布到 OSS 供下游消费
+//
+// 关键词: hack-skills, AES256 zip, skill 打包, 加密压缩, CI 打包
+// =============================================================================
+
+// CLI 参数定义
+// 关键词: cli.String, 命令行参数解析
+output_zip = cli.String("output", cli.setDefault("hack-skills.zip"), cli.setHelp("output zip file path"))
+password = cli.String("password", cli.setRequired(true), cli.setHelp("zip encryption password"))
+src_dir = cli.String("src", cli.setDefault("skills"), cli.setHelp("source directory to pack"))
+cli.check()
+
+assert password != "", "password must not be empty"
+
+// 解析项目根目录与源目录
+// 关键词: os.Getwd, file.Join, 路径计算
+project_root = os.Getwd()~
+log.info("project root: %s", project_root)
+
+src_path = src_dir
+if !file.IsAbs(src_dir) {
+    src_path = file.Join(project_root, src_dir)
+}
+assert file.IsDir(src_path), f"source directory not found: ${src_path}"
+log.info("source directory: %s", src_path)
+log.info("output zip: %s", output_zip)
+
+// 文件类型过滤规则
+// 关键词: 文件过滤, 仅保留 markdown
+allowed_extensions = [".md"]
+
+// 路径黑名单（排除隐藏文件、系统文件）
+// 关键词: 黑名单, 排除规则, .DS_Store
+excluded_basenames = [".DS_Store", "Thumbs.db", ".gitkeep"]
+
+func isExcludedBasename(name) {
+    for bad in excluded_basenames {
+        if name == bad {
+            return true
+        }
+    }
+    return false
+}
+
+func isAllowedExtension(ext) {
+    for target in allowed_extensions {
+        if ext == target {
+            return true
+        }
+    }
+    return false
+}
+
+// 收集文件到内存映射，key 为 zip 内的相对路径
+// 关键词: filesys.Recursive, file.ReadFile, zip 内部路径
+collected_files = {}
+total_files = 0
+total_size = 0
+skipped_count = 0
+
+err = filesys.Recursive(src_path,
+    filesys.onFileStat((file_path, info) => {
+        basename = file.GetBase(file_path)
+        if isExcludedBasename(basename) {
+            skipped_count++
+            return nil
+        }
+        ext = file.GetExt(file_path)
+        if !isAllowedExtension(ext) {
+            skipped_count++
+            return nil
+        }
+
+        content, read_err = file.ReadFile(file_path)
+        if read_err != nil {
+            log.error("failed to read file %s: %v", file_path, read_err)
+            return nil
+        }
+
+        // 在 zip 中保留 skills/ 前缀，使用相对项目根的路径
+        rel_path = str.TrimPrefix(file_path, project_root + "/")
+        // 强制使用正斜杠，兼容 windows 出现的反斜杠
+        rel_path = str.ReplaceAll(rel_path, "\\", "/")
+
+        collected_files[rel_path] = string(content)
+        total_files++
+        total_size += len(content)
+        log.info("collected: %s (%d bytes)", rel_path, len(content))
+        return nil
+    })
+)
+
+if err != nil {
+    log.error("recursive scan failed: %v", err)
+    assert false, f"scan failed: ${err}"
+}
+
+log.info("collected %d files, skipped %d non-skill entries", total_files, skipped_count)
+assert total_files > 0, "no skill markdown collected, refuse to build empty zip"
+assert total_size > 0, "total content size must be greater than zero"
+
+// AES-256 加密压缩
+// 关键词: zip.CompressRawWithPassword, AES256, 加密压缩
+log.info("compressing with AES-256 encryption")
+start_time = time.Now()
+encrypted_data, compress_err = zip.CompressRawWithPassword(collected_files, password, zip.AES256)
+if compress_err != nil {
+    log.error("encrypted compression failed: %v", compress_err)
+    assert false, f"compression failed: ${compress_err}"
+}
+duration = time.Now().Sub(start_time)
+
+compressed_size = len(encrypted_data)
+log.info("compression completed in %v", duration)
+log.info("original size: %d bytes", total_size)
+log.info("compressed size: %d bytes", compressed_size)
+
+assert compressed_size > 0, "encrypted data must not be empty"
+
+// 写出 zip 文件
+// 关键词: file.Save, zip 输出
+save_err = file.Save(output_zip, encrypted_data)
+if save_err != nil {
+    log.error("failed to save zip file: %v", save_err)
+    assert false, f"save failed: ${save_err}"
+}
+assert file.IsFile(output_zip), f"output file should exist: ${output_zip}"
+
+saved_size = len(file.ReadFile(output_zip)~)
+assert saved_size == compressed_size, f"saved size mismatch: expected ${compressed_size} got ${saved_size}"
+log.info("zip file saved: %s (%d bytes)", output_zip, saved_size)
+
+// 回环验证：使用同一密码尝试解压一个文件，校验加密是否生效
+// 关键词: zip.ExtractFileFromRawWithOptions, 加密回环验证
+log.info("verifying encryption by extracting one entry with password")
+sample_key = ""
+for k, _ in collected_files {
+    sample_key = k
+    break
+}
+assert sample_key != "", "sample entry must be selected for verification"
+
+extracted_bytes, extract_err = zip.ExtractFileFromRawWithOptions(encrypted_data, sample_key,
+    zip.extractPassword(password),
+)
+if extract_err != nil {
+    log.error("verification extract failed: %v", extract_err)
+    assert false, f"verification extract failed: ${extract_err}"
+}
+assert string(extracted_bytes) == collected_files[sample_key], "extracted content must match original"
+log.info("verification ok: %s extracted with correct password", sample_key)
+
+// 反向验证：错误密码应当失败（任意一个：解压报错，或返回内容不一致）
+// 关键词: 反向验证, 错误密码失败检查
+wrong_password = password + "_wrong"
+defer func {
+    err = recover()
+    if err != nil {
+        log.info("expected failure when using wrong password: %v", err)
+    }
+}
+wrong_bytes, wrong_err = zip.ExtractFileFromRawWithOptions(encrypted_data, sample_key,
+    zip.extractPassword(wrong_password),
+)
+if wrong_err == nil && string(wrong_bytes) == collected_files[sample_key] {
+    assert false, "wrong password should not decrypt content correctly"
+} else {
+    log.info("wrong password rejected as expected (err=%v, contentMatched=%v)", wrong_err, string(wrong_bytes) == collected_files[sample_key])
+}
+
+// 输出统计摘要
+// 关键词: 摘要统计, 文件数量, 文件夹分布
+folder_stats = {}
+for file_path, _ in collected_files {
+    parts = str.Split(file_path, "/")
+    if len(parts) >= 2 {
+        bucket = parts[0] + "/" + parts[1]
+        if folder_stats[bucket] == nil {
+            folder_stats[bucket] = 0
+        }
+        folder_stats[bucket] = folder_stats[bucket] + 1
+    }
+}
+
+log.info("=== build summary ===")
+log.info("total files: %d", total_files)
+log.info("original size: %d bytes", total_size)
+log.info("compressed size: %d bytes", compressed_size)
+log.info("output: %s", output_zip)
+log.info("encryption: AES-256 (password length=%d)", len(password))
+log.info("=== folder distribution (top buckets) ===")
+for bucket, count in folder_stats {
+    log.info("  %s: %d files", bucket, count)
+}
+log.info("hack-skills zip build completed successfully")
