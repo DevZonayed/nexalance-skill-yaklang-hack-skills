@@ -4,13 +4,34 @@
 //       使用 AES-256 加密压缩为单个 zip 文件
 // 用途: GitHub Actions CI 中的打包步骤，发布到 OSS 供下游消费
 //
-// 关键词: hack-skills, AES256 zip, skill 打包, 加密压缩, CI 打包
 // =============================================================================
+// 关于"加密"的目的（重要说明，请先读完再修改）
+// -----------------------------------------------------------------------------
+// 此处所谓"加密"并非用于安全保密。本仓库的内容（攻防/红队相关 SKILL 文档）
+// 在打包后通过公网 OSS 分发，部分杀软 / EDR / 浏览器安全引擎会基于关键词或
+// 启发式特征对 zip 内容进行扫描，从而把整包标记为可疑文件，导致：
+//   1. 终端杀软误删用户已下载的 zip
+//   2. 公司代理 / 出网网关在传输过程中拦截
+//   3. 企业 EDR 对解压目录内的 .md 文件持续告警
+// 因此我们使用 AES-256 加密 + 一个 *固定的、对所有用户公开的* 密码，把 zip
+// 包变成 "不可被简单扫描内容" 的密文，从而让杀软不会在传输/落盘时直接命中。
+// 设计原则:
+//   - 密码是一个公开常量（DEFAULT_PASSWORD）
+//   - 文档 / README / 调用方都需要明示密码 = "hack-skills"
+//   - 这不是访问控制，目的只是绕开内容启发式扫描
+// 关键词: 反杀软误报, 内容启发式扫描绕过, 公开密码, AES256, 非安全加密
+// =============================================================================
+
+// 公开的固定打包密码
+// 关键词: DEFAULT_PASSWORD, 公开密码常量
+DEFAULT_PASSWORD = "hack-skills"
 
 // CLI 参数定义
 // 关键词: cli.String, 命令行参数解析
 output_zip = cli.String("output", cli.setDefault("hack-skills.zip"), cli.setHelp("output zip file path"))
-password = cli.String("password", cli.setRequired(true), cli.setHelp("zip encryption password"))
+// password 默认使用公开常量 hack-skills，仅在极特殊情况下才覆盖
+// 关键词: 默认密码, hack-skills 常量
+password = cli.String("password", cli.setDefault(DEFAULT_PASSWORD), cli.setHelp("zip encryption password (default: hack-skills, public constant for AV-evasion only)"))
 src_dir = cli.String("src", cli.setDefault("skills"), cli.setHelp("source directory to pack"))
 cli.check()
 
@@ -191,7 +212,9 @@ log.info("total files: %d", total_files)
 log.info("original size: %d bytes", total_size)
 log.info("compressed size: %d bytes", compressed_size)
 log.info("output: %s", output_zip)
-log.info("encryption: AES-256 (password length=%d)", len(password))
+// 密码本身是公开常量，直接打印明文以便下游验证
+// 关键词: 公开密码打印, 非保密
+log.info("encryption: AES-256 (public password=%q, purpose=anti-AV-false-positive)", password)
 log.info("=== folder distribution (top buckets) ===")
 for bucket, count in folder_stats {
     log.info("  %s: %d files", bucket, count)
