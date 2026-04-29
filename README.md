@@ -17,6 +17,31 @@ The current branch has converged to a standard directory structure: every skill 
 
 The objective is straightforward: organize security knowledge that is genuinely useful in real engagements and easy to audit and maintain into a set of installable, searchable, and composable HackSkills.
 
+## Browse Online
+
+This repo is published in three forms — pick whichever your workflow prefers; they are kept in sync on every push to `main`.
+
+| Channel | What you get | When to use |
+|---|---|---|
+| **Web UI** — <https://skills.hackbenchmark.com> | Fuzzy search, category sidebar, P0/P1/P2 tier filter, copy-paste install commands, encrypted ZIP download | Quick lookup, sharing links to a specific skill, demoing the catalog |
+| **GitHub source** — this repo | Plain `SKILL.md` per skill, full markdown rendering, pull-request review | Diff review, contributing, deep reading offline |
+| **Encrypted ZIP** — see [Offline ZIP](#offline-zip-encrypted) | One-shot download of all `*.md` for air-gapped use | No internet on target, AV strips plain markdown |
+
+The website is a static, fully client-side build of `site/` — no tracking, no backend. Source: [`site/`](./site), workflow: [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml). Search uses a weighted fuzzy index over name / id / category / description with field qualifiers like `category:auth`, `tier:deep`, `lines:>200`.
+
+```text
+                        ┌─────────────────────────────────────┐
+                        │   skills.hackbenchmark.com (static) │  ── search / filter / copy install cmd
+                        └─────────────────────────────────────┘
+                                          ▲
+   github.com/yaklang/hack-skills ───────►┤  same repo, three views
+                                          ▼
+                        ┌─────────────────────────────────────┐
+                        │   hack-skills.zip (AES-256, public  │  ── offline / behind AV
+                        │   password: hack-skills, via CDN)   │
+                        └─────────────────────────────────────┘
+```
+
 ## Knowledge Sources & Distillation Boundaries
 
 This repository is not a mirror of external materials — it is a distillation layer aimed at Agents.
@@ -341,6 +366,26 @@ curl -fsSL https://raw.githubusercontent.com/yaklang/hack-skills/main/skills/hac
 git clone https://github.com/yaklang/hack-skills.git
 cd hack-skills
 ```
+
+### Offline ZIP (encrypted)
+
+For air-gapped environments, slow networks, or any place where AV / EDR / browser content scanners strip plain offensive-security markdown:
+
+```bash
+curl -fsSLO https://oss-qn.yaklang.com/hack-skills/latest/hack-skills.zip
+7z x -phack-skills hack-skills.zip
+# or:  unzip -P hack-skills hack-skills.zip
+```
+
+| Channel | URL |
+|---|---|
+| Primary CDN | <https://oss-qn.yaklang.com/hack-skills/latest/hack-skills.zip> |
+| Backup CDN | <https://aliyun-oss.yaklang.com/hack-skills/latest/hack-skills.zip> |
+| Build version manifest | <https://oss-qn.yaklang.com/hack-skills/latest/version.txt> |
+
+**About the password.** The ZIP is wrapped with **AES-256** and a **public constant** password `hack-skills`. This is **not access control** — anyone can download, anyone can extract, the password is printed openly in the README, the website, the GitHub Actions workflow, and CI logs. It exists solely to bypass content heuristics on AV / EDR / browser scanners that flag plain offensive markdown and silently drop or quarantine the file in transit. Build, encryption settings, and integrity verification all live in [`.github/workflows/upload-hack-skills.yml`](./.github/workflows/upload-hack-skills.yml).
+
+Same ZIP is also surfaced one-click on the website's nav bar (`ZIP` button) and the `Install → Offline ZIP` tab.
 
 ## Design Principles
 

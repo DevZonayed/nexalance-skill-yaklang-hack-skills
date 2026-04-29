@@ -17,6 +17,31 @@
 
 目标很直接：把真正能在实战里派上用场、又方便审查和持续维护的安全知识，整理成一套可安装、可检索、可组合的 HackSkills。
 
+## 在线浏览
+
+本仓库以三种形式发布——按你的工作流挑一种就行，三处内容每次推送 `main` 都会同步刷新。
+
+| 入口 | 你能拿到什么 | 适用场景 |
+|---|---|---|
+| **网页版** —— <https://skills.hackbenchmark.com> | 模糊搜索、分类侧栏、P0/P1/P2 等级筛选、一键复制安装命令、加密 ZIP 下载 | 日常查阅、分享某个 skill 链接、给同事做演示 |
+| **GitHub 源码** —— 当前仓库 | 每个 skill 一个 `SKILL.md`，原生 markdown 渲染，PR review 链路 | diff 审阅、贡献代码、深度阅读 |
+| **加密 ZIP 包** —— 见 [离线加密 ZIP](#离线加密-zip) | 一次性下载所有 `*.md`，离线/隔离网络可用 | 目标内网无外网、AV 杀掉明文 markdown |
+
+网页版是 `site/` 目录的纯前端静态构建——无追踪、无后端。源码：[`site/`](./site)，部署 workflow：[`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml)。搜索框基于加权模糊索引，覆盖 name / id / category / description，并支持 `category:auth`、`tier:deep`、`lines:>200` 这样的字段限定语法。
+
+```text
+                        ┌─────────────────────────────────────┐
+                        │   skills.hackbenchmark.com (静态站) │  ── 搜索 / 筛选 / 复制安装命令
+                        └─────────────────────────────────────┘
+                                          ▲
+   github.com/yaklang/hack-skills ───────►┤  同一仓库，三种视图
+                                          ▼
+                        ┌─────────────────────────────────────┐
+                        │   hack-skills.zip (AES-256，公开    │  ── 离线 / 杀软误报场景
+                        │   密码 hack-skills，CDN 分发)       │
+                        └─────────────────────────────────────┘
+```
+
 ## 知识来源与蒸馏边界
 
 这个仓库不是外部资料的镜像仓库，而是一个面向 Agent 的蒸馏层。
@@ -341,6 +366,26 @@ curl -fsSL https://raw.githubusercontent.com/yaklang/hack-skills/main/skills/hac
 git clone https://github.com/yaklang/hack-skills.git
 cd hack-skills
 ```
+
+### 离线加密 ZIP
+
+针对隔离网络、网速慢、或者会被 AV / EDR / 浏览器内容扫描器把明文攻防 markdown 误判删除的场景：
+
+```bash
+curl -fsSLO https://oss-qn.yaklang.com/hack-skills/latest/hack-skills.zip
+7z x -phack-skills hack-skills.zip
+# 或：unzip -P hack-skills hack-skills.zip
+```
+
+| 通道 | 链接 |
+|---|---|
+| 主 CDN | <https://oss-qn.yaklang.com/hack-skills/latest/hack-skills.zip> |
+| 备用 CDN | <https://aliyun-oss.yaklang.com/hack-skills/latest/hack-skills.zip> |
+| 当前构建版本号 | <https://oss-qn.yaklang.com/hack-skills/latest/version.txt> |
+
+**关于 ZIP 密码。** ZIP 包采用 **AES-256** 加密，密码是**公开常量** `hack-skills`。**这不是访问控制**——任何人都能下载、任何人都能解压，密码在 README、网页版、GitHub Actions workflow 和 CI 日志里都明示。它存在的唯一目的，是绕过 AV / EDR / 浏览器扫描器对明文攻防 markdown 的内容启发式特征命中——避免文件在传输过程被静默拦截或隔离。打包、加密设置和完整性校验细节在 [`.github/workflows/upload-hack-skills.yml`](./.github/workflows/upload-hack-skills.yml)。
+
+同一份 ZIP 在网页版顶部 `ZIP` 按钮和 `Install → Offline ZIP` Tab 里也提供一键下载。
 
 ## 设计原则
 
