@@ -32,6 +32,10 @@
     heroCatsNum:     document.getElementById("hero-cats-num"),
     heroLines:       document.getElementById("hero-lines"),
     heroBuild:       document.getElementById("hero-build"),
+    brandVersion:    document.getElementById("brand-version"),
+    provSkillsNum:   document.getElementById("prov-skills-num"),
+    provCatsNum:     document.getElementById("prov-cats-num"),
+    provBuild:       document.getElementById("prov-build"),
     marqueeTrack:    document.getElementById("marquee-track"),
     footVersion:     document.getElementById("foot-version"),
     footBuildTime:   document.getElementById("foot-build-time"),
@@ -144,6 +148,16 @@
     els.footVersion.textContent   = r.version || "—";
     els.footBuildTime.textContent = (r.buildTime || "").replace("T", " ").replace("Z", " UTC");
     if (els.footYear) els.footYear.textContent = String(new Date().getFullYear());
+
+    // brand-version 徽章 (与 hackbenchmark 同款), provenance bar
+    // 关键词: brand-version, provenance bar, sister site visual parity
+    if (els.brandVersion) {
+      const v = r.version || "dev";
+      els.brandVersion.textContent = "v" + v.split("-").slice(0, 2).join("-");
+    }
+    if (els.provSkillsNum) els.provSkillsNum.textContent = formatNum(r.totalSkills);
+    if (els.provCatsNum)   els.provCatsNum.textContent   = formatNum(r.totalCategories);
+    if (els.provBuild)     els.provBuild.textContent     = r.version || "dev";
 
     // hero 占位 placeholder 数字也跟着更新
     if (els.heroSearchInput) {
