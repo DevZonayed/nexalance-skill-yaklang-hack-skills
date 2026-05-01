@@ -68,3 +68,7 @@ common/yak/ssa2llvm/runtime/embed/ssa2llvm-runtime/
 
 # local build artifacts
 /ssa2llvm
+
+# distillation pipeline cache (videos / PDFs / model raw outputs)
+distill-output/
+.distill-cache/
