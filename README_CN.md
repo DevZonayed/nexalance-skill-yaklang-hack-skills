@@ -396,6 +396,34 @@ curl -fsSLO https://oss-qn.yaklang.com/hack-skills/latest/hack-skills.zip
 - 目录名尽量让人一眼看出安全语义。
 - 不包含任何特定客户信息；所有内容均为通用教育性方法论。
 
+## 无害化 PoC 政策
+
+技能文档的目标是教你如何**证明**漏洞、并在授权场景下取得访问权，而非提供"唯一作用就是
+不可逆地销毁数据或让目标下线"的 Payload。边界很简单：
+
+- **移除 / 无害化——不可逆的破坏性操作。** 数据销毁类（`DROP` / `TRUNCATE` / 大范围 `DELETE` /
+  Redis `FLUSHALL`）与可用性销毁类（服务 `shutdown` / 重启 / DoS 端点）一律替换为能证明同一
+  注入点或同等能力的无害化证明。
+- **保留——非破坏性的访问原语。** 真实授权测试所需的标准攻击 PoC 予以保留，包括 RCE，例如
+  WebShell 写入（`INTO OUTFILE` / `DUMPFILE`）、反弹 Shell、命令执行——它们能取得访问权而
+  不会摧毁环境。
+
+| 被规避的破坏性形态 | 改用 | 为何仍能证明问题 |
+|---|---|---|
+| `...; DROP TABLE users;--`（堆叠查询） | `...; SELECT SLEEP(5);--` | 时间延迟即可证明任意堆叠语句执行，且不丢数据 |
+| `DELETE FROM ... WHERE x='' OR '1'='1'`（删空全表） | 在 DELETE 上下文中用时间盲注证明 | 确认注入但不删除任何行 |
+| `redis-cli ... FLUSHALL` / gopher 链中的 `flushall` | 删除，或在 RCE 链中替换为 `PING` | 保留 RCE 链完整，仅去掉清库动作 |
+| `/actuator/shutdown`（DoS） | `/actuator/env`、`/actuator/heapdump`、`/actuator/threaddump` | 同等侦察/泄密价值，但不会让应用下线 |
+
+约定：
+
+- 优先使用**时间盲注**（`SLEEP`/`pg_sleep`/`WAITFOR DELAY`）或**只读**证明，避免任何销毁
+  数据或可用性的语句。
+- **RCE 仍在范围内：** WebShell 写入、反弹 Shell、命令执行属于非破坏性访问原语，是授权测试的
+  必要组成，刻意予以保留。
+- 标准只读侦察命令（如 `xp_cmdshell 'whoami'`、`LOAD_FILE('/etc/passwd')`）予以保留。
+- 防御性加固片段（如 `rename-command FLUSHALL ""`）作为防御措施予以保留。
+
 ## 贡献方式
 
 欢迎提交 PR，重点方向包括：

