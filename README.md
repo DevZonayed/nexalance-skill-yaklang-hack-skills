@@ -396,6 +396,37 @@ Same ZIP is also surfaced one-click on the website's nav bar (`ZIP` button) and 
 - Directory names should convey security semantics at a glance.
 - No customer-specific information; all content is generic methodology for educational use.
 
+## Harmless PoC Policy
+
+Skills document how to **prove** a vulnerability and how to gain access in an authorized
+engagement — they do not ship payloads whose only purpose is to irreversibly destroy data or
+take a target offline. The boundary is simple:
+
+- **Removed / neutralized — irreversibly destructive operations.** Data destruction
+  (`DROP` / `TRUNCATE` / mass `DELETE` / Redis `FLUSHALL`) and availability destruction
+  (service `shutdown` / reboot / DoS endpoints) are replaced with non-destructive proofs that
+  demonstrate the same injection point or capability.
+- **Retained — non-destructive access primitives.** Standard offensive PoCs needed for real
+  authorized testing are kept, including RCE such as webshell writes (`INTO OUTFILE` /
+  `DUMPFILE`), reverse shells, and command execution. These grant access without wrecking the
+  environment.
+
+| Destructive form (avoided) | Used instead | Why it still proves the issue |
+|---|---|---|
+| `...; DROP TABLE users;--` (stacked query) | `...; SELECT SLEEP(5);--` | Time delay proves arbitrary stacked-statement execution, no data loss |
+| `DELETE FROM ... WHERE x='' OR '1'='1'` (deletes all rows) | time-based blind proof inside the DELETE context | Confirms injection without removing rows |
+| `redis-cli ... FLUSHALL` / gopher `...flushall...` chain | dropped, or replaced with `PING` inside the RCE chain | Keeps the RCE chain intact, drops the data wipe |
+| `/actuator/shutdown` (DoS) | `/actuator/env`, `/actuator/heapdump`, `/actuator/threaddump` | Same recon/secret-leak value without taking the app down |
+
+Conventions:
+
+- Prefer **time-based** (`SLEEP`/`pg_sleep`/`WAITFOR DELAY`) or **read-only** proofs over any
+  statement that destroys data or availability.
+- **RCE stays in scope:** webshell drops, reverse shells, and command execution are non-destructive
+  access primitives essential to authorized testing and are intentionally retained.
+- Standard read-only recon commands (e.g. `xp_cmdshell 'whoami'`, `LOAD_FILE('/etc/passwd')`) are kept.
+- Defensive hardening snippets (e.g. `rename-command FLUSHALL ""`) are kept as defenses.
+
 ## Contributing
 
 PRs are welcome. Key areas include:

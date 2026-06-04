@@ -343,7 +343,7 @@ def queueRequests(target, wordlists):
 |---|---|---|
 | XML 解析器禁用外部实体 / DTD 加载 / 参数实体 | 否则一行 `<!ENTITY x SYSTEM "file:///etc/passwd">` 即任意文件读取 | Body 注入含 `<!DOCTYPE>` 与 `SYSTEM` 实体的 XML，看响应是否回显 `/etc/passwd` |
 | XXE 盲注：响应不回显时仍走带外通道排查 | 不回显 ≠ 不存在；OOB 仍可窃数据 | 在 Burp Collaborator / DNSLog 配 DTD，构造参数实体 → 监听是否收到目标外联 |
-| 任意"导入 URL / 拉取图片 / Webhook 回调 / 预览链接"接口禁用 `file://` / `gopher://` / `dict://` / `jar://` / `php://` 协议 | 否则 SSRF 全套：读本地文件、攻击内网、命令执行 | 把 URL 改 `file:///etc/passwd`、`gopher://127.0.0.1:6379/_FLUSHALL`、`http://169.254.169.254/`，看响应或带外 |
+| 任意"导入 URL / 拉取图片 / Webhook 回调 / 预览链接"接口禁用 `file://` / `gopher://` / `dict://` / `jar://` / `php://` 协议 | 否则 SSRF 全套：读本地文件、攻击内网、命令执行 | 把 URL 改 `file:///etc/passwd`、`gopher://127.0.0.1:6379/_INFO`、`http://169.254.169.254/`，看响应或带外 |
 | URL 输入做"DNS resolve + 解析后再校验"，禁止解析到内网 IP / 保留段 | 仅匹配字符串可被 DNS rebind 或 `127.0.0.1.nip.io` 绕过 | 用 `http://attacker.tld`（A 记录指向 169.254.169.254）发 SSRF，重定向到内网看是否打通 |
 | 重定向跟随的 URL 同样走 SSRF 校验，不能"首跳合法→302→内网" | 多数 SSRF 通过 302 跳板成立 | 攻击者域名返回 `302 Location: http://127.0.0.1:8500/`，看目标是否跟随 |
 | 状态变更接口（支付、提现、改密、改邮箱、删数据）有 Anti-CSRF Token + SameSite + Origin/Referer 三重 | 缺一即可被恶意页面静默触发 | 写一个 attacker.html 含自动提交 form 指向目标接口，浏览器登录后访问看是否触发 |
